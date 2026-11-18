@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+ <ItemGroup><Compile Include="Program.cs"/><Compile Include="BridgeInstallerStub.cs"/><Compile Include="../src/MechJebYawBridge.cs"/><Compile Include="../src/Navigation.cs"/><Compile Include="../src/Kramax*.cs"/><Compile Include="../build/tests/UpstreamOracle.cs"/><Compile Include="../src/MechJebAdapter.cs"/></ItemGroup>
+</Project>

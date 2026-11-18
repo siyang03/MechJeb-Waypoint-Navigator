@@ -1,0 +1,13 @@
+Kerbin Waypoint Toolkit — shared distribution license notice
+
+The Kramax-derived navigator and adapted editor prediction code are provided
+under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International:
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+See THIRD_PARTY_NOTICES.md and licenses/Kramax-LICENSE.txt for upstream credits
+and terms. Original independent navigator code retains the notice in
+licenses/Original-code-MIT.txt. This does not relicense Kramax code under MIT.
+
+Other editor files and the supplied map retain their existing rights/terms;
+this bundle does not assert a new license for them. No KSP, MechJeb or Harmony
+binary is redistributed. RCTestFlight is credited as inspiration only.

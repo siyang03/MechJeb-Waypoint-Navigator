@@ -1,0 +1,21 @@
+(function(){
+let passed=0,failed=0;const P=FlightPrediction;
+const assert=(v,msg='Assertion failed')=>{if(!v)throw Error(msg);},near=(a,b,t=.001)=>assert(Math.abs(a-b)<t,`${a} != ${b}`);
+function test(name,fn){try{fn();passed++;console.log('PASS PREDICTION '+name);}catch(e){failed++;console.log('FAIL PREDICTION '+name+': '+e.message);}}
+function run(points,options={}){const iterator=P.simulate(points,options);let step;do{step=iterator.next();}while(!step.done);return step.value;}
+test('Coordinated turn radius at 300 m/s and 10000 m',()=>{near(P.turnRadius(300,10000,30),16424.98,1);assert(P.turnRadius(300,20000,30)>P.turnRadius(300,0,30));near(P.turnRadius(600,10000,30),4*P.turnRadius(300,10000,30));});
+test('Navigator 90-degree sequence threshold is 30 seconds',()=>{const status={valid:true,length:100000,traveled:90000,remaining:9000,heading:90};assert(!P.shouldSequence(status,true,false,0,300));status.remaining=8999;assert(P.shouldSequence(status,true,false,0,300));assert(!P.shouldSequence(status,true,true,0,300));status.valid=false;assert(!P.shouldSequence(status,true,false,0,300));});
+test('Velocity PID follows source gains, saturation, derivative and integral',()=>{const pid=new P.VelocityPID();near(pid.response(2,0,.02),-8.032);near(pid.response(3,0,.02),-30);const p=new P.VelocityPID();for(let i=0;i<100;i++)p.response(1,1,.02);near(p.response(1,1,.02),0);});
+test('Desired lateral velocity uses sign reversal and half-speed clamp',()=>{near(P.desiredVelocity({cross:10000,vC:100},300),-150);near(P.desiredVelocity({cross:10000,vC:-100},300),150);});
+test('Course status agrees with spherical cross-track examples',()=>{const s=P.course({lat:0,lon:0},{lat:0,lon:10},{lat:1,lon:5});near(s.cross,-600000*Math.PI/180);near(s.traveled,600000*5*Math.PI/180);});
+test('Straight route completes with negligible lateral deviation',()=>{const r=run([{lat:0,lon:0},{lat:0,lon:5}]);assert(r.complete);assert(r.maxCrossTrack<1);assert(r.samples.every(p=>Math.abs(p.bank)<.001));near(r.distance,600000*5*Math.PI/180,20);});
+test('Ninety degree turn anticipates and obeys bank limit',()=>{const r=run([{lat:0,lon:0},{lat:0,lon:10},{lat:10,lon:10}]);assert(r.complete);assert(r.switches.length===1);assert(r.switches[0].lead>8500&&r.switches[0].lead<9010);assert(r.samples.some(p=>Math.abs(p.bank)>20));assert(r.samples.every(p=>p.bank===0||Math.abs(p.bank)===30));});
+test('Approach flag suppresses early switching',()=>{const r=run([{lat:0,lon:0},{lat:0,lon:10,flags:{FAF:'true'}},{lat:10,lon:10}]);assert(r.switches.length===1);assert(r.switches[0].lead<=10);});
+test('Date-line and high-latitude tracks remain finite',()=>{for(const points of [[{lat:0,lon:179},{lat:0,lon:-179}],[{lat:85,lon:170},{lat:85,lon:-170}]]){const r=run(points);assert(r.complete);assert(r.samples.every(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lon)<=180));}});
+test('Duplicates complete without nonfinite control',()=>{const r=run([{lat:0,lon:0},{lat:0,lon:0},{lat:0,lon:2}]);assert(r.complete);assert(r.samples.every(p=>Number.isFinite(p.bank)));assert(run([{lat:0,lon:0},{lat:0,lon:0}]).complete);});
+test('Time limit returns incomplete status rather than invented completion',()=>{const r=run([{lat:0,lon:0},{lat:0,lon:20}],{maxTime:1});assert(!r.complete);assert(r.warnings.length);});
+test('Turn circle samples maintain ground radius',()=>{const event={lat:20,lon:179,heading:90,turn:-90};const r=10000,center=P.destination(event,0,r);const circle=P.circle(event,r);assert(circle.length===73);for(const p of circle)near(Kerbin.distance(center,p),r,.01);});
+test('Changing speed and bank changes predicted track',()=>{const points=[{lat:0,lon:0},{lat:0,lon:10},{lat:10,lon:10}];const slow=run(points,{speed:250,bankLimit:20}),fast=run(points,{speed:350,bankLimit:30});assert(fast.radius>slow.radius);assert(slow.switches[0].lead<fast.switches[0].lead);});
+test('Invalid physical inputs reject',()=>{for(const options of [{speed:0},{altitude:-1},{bankLimit:-1},{bankLimit:90}]){let failed=false;try{run([{lat:0,lon:0},{lat:0,lon:1}],options);}catch{failed=true;}assert(failed);}});
+globalThis.predictionResultTests={passed,failed};console.log(`\nPREDICTION: ${passed} passed, ${failed} failed`);
+})();
