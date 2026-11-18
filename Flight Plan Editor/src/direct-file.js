@@ -11,7 +11,7 @@ function updateFileControls(){
   $('newCfg').disabled=fileBusy;
   $('cfgFilename').readOnly=!!directHandle;
 }
-function detachDirectFile(){directHandle=null;directText=null;updateFileControls();fileStatus(directSupported?'No CFG connected. Open a CFG once, then Save CFG writes changes to that file.':'This browser does not support direct file access. Open the editor in Chrome or Edge to open and save CFG files.',!directSupported);}
+function detachDirectFile(){directHandle=null;directText=null;updateFileControls();fileStatus(directSupported?'No CFG connected. Open a CFG once, then Save CFG writes changes to that file.':'This browser does not support direct file access. Open the editor in Chrome or Edge instead.',!directSupported);}
 function cfgForSaving(){
   for(const p of all()){
     K.validate(p);

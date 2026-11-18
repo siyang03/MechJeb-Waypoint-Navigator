@@ -2,7 +2,7 @@
 let defaultCfgHandle=null;
 function updateDefaultCfg(){
  $('defaultCfg').value=defaultCfgHandle?.name||'';
- $('openDefaultCfg').disabled=!defaultCfgHandle||!directSupported;
+ $('openDefaultCfg').disabled=!directSupported;
 }
 function cfgDatabase(){return new Promise((resolve,reject)=>{
  if(!window.indexedDB){reject(Error('Persistent file storage unavailable'));return;}
@@ -15,7 +15,7 @@ async function rememberCfg(handle){
  try{const db=await cfgDatabase();try{await new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(handle,'default');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}finally{db.close();}}
  catch{ $('defaultCfg').title='Remembered for this tab only; browser persistent storage is unavailable.'; }
 }
-$('openDefaultCfg').onclick=()=>{if(defaultCfgHandle)openDirectCfg(defaultCfgHandle);};
+$('openDefaultCfg').onclick=()=>openDirectCfg(defaultCfgHandle);
 updateDefaultCfg();
 const startupCfgSnapshot=snapshot();
 async function autoOpenDefaultCfg(handle){
@@ -26,7 +26,7 @@ async function autoOpenDefaultCfg(handle){
     if(directHandle||dirty||snapshot()!==startupCfgSnapshot)return;
     if(permission==='granted')await openDirectCfg(handle);
     else fileStatus(`Default CFG: ${handle.name}. Browser permission is required; click Open Default CFG to authorize access.`);
-  }catch{fileStatus('Could not open the default CFG automatically. Click Open Default CFG to retry, or Open Another CFG to choose a file.',true);}
+  }catch{fileStatus('Could not open the default CFG automatically. Click Open Default CFG to retry, or Open a CFG to choose a file.',true);}
 }
 (async()=>{
   try{
