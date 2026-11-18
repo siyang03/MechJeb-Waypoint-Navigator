@@ -45,7 +45,7 @@ function drawPrediction(){
  if(!predictionEnabled||!predictionResult)return;
  ctx.save();ctx.strokeStyle='#ffad66';ctx.lineWidth=2;ctx.setLineDash([6,4]);predictionLine(predictionResult.samples);
  if($('previewCircles').checked&&Number.isFinite(predictionResult.groundRadius)){ctx.strokeStyle='#ffad6670';ctx.lineWidth=1;ctx.setLineDash([3,5]);
-  for(const event of predictionResult.switches){if(selected>=0&&selected!==event.waypoint)continue;if(Math.abs(event.turn)<1)continue;predictionLine(FlightPrediction.circle(event,predictionResult.groundRadius));}
+  for(const event of predictionResult.switches){if(Math.abs(event.turn)<1)continue;predictionLine(FlightPrediction.circle(event,predictionResult.groundRadius));}
  }
  ctx.restore();
 }
