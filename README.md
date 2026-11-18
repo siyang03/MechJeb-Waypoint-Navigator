@@ -1,43 +1,69 @@
 # Kerbin Waypoint Toolkit
-1. Plan a Kerbin sightseeing route with **Flight Plan Editor**, then
-2. let your aircraft follow it with **MechJeb Waypoint Navigator**.
 
-Inspired by [RCTestFlight’s waypoint-mission videos](https://youtu.be/vYeYZpBE51I). Based on [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/).
+**Draw a flight route on a Kerbin map. Let your aircraft fly it automatically.**
 
-## Install
+- **Flight Plan Editor** — An interactive, offline map for creating routes and previewing turns.
+- **Waypoint Navigator** — Follows your route using MechJeb Aircraft Autopilot.
 
-1. **Waypoint Navigator** mod:
-   1. Install MechJeb and KSP Harmony 2 (`000_Harmony`, search it on CKAN).
-       - Chances are you have already installed them.
-   2. Download `GameData/MechJebWaypointNavigator`, and copy folder `MechJebWaypointNavigator` into your KSP `GameData` folder.
-       - On updates, replace the `GameData/MechJebWaypointNavigator` folder but **preserve your existing CFG files**.
-2. Standalone **Flight Plan Editor** tool:
-   1. Download folder `Flight Plan Editor`, place it anywhere you like, click `Launch the Editor.html` in the folder to run.
+Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Uses [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/).
 
+## Download & Install
 
-## User instruction: make a route and fly it
+**1. Download:**
 
-1. **Pre flight**, plan the routes:
-   1. Open `Flight Plan Editor/Launch the Editor.html` in a browser.
-   2. Add or move waypoints on the map, edit their details and save a CFG.
-       - Browsers with direct-file support (Chrome / Edge) can save to a selected file; otherwise (Firefox) use the create and download option.
-   3. Put the CFG in your KSP `GameData/MechJebWaypointNavigator` folder.
-       - Or, as recommended, simply modify `GameData/MechJebWaypointNavigator/FlightPlans.cfg` directly on your Chrome browser
+- [**Waypoint Navigator (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/Waypoint-Navigator.zip)
+- [**Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/Flight-Plan-Editor.zip)
+
+**2. Install Waypoint Navigator**
+
+Requires [MechJeb2](https://github.com/MuMech/MechJeb2) and **KSP Harmony 2** (`000_Harmony`, available on CKAN).
+
+Extract the ZIP and copy `MechJebWaypointNavigator` into your KSP `GameData` folder.
+
+On updates, replace the plugin files but **keep your existing CFG flight plans**.
+
+**3. Launch Flight Plan Editor**
+
+Extract the ZIP anywhere and open `Flight Plan Editor/Launch the Editor.html` in your browser. No installation or internet connection required.
+
+## Quick Start — Plan & Fly
+
+**1. Draw your route**
+
+Open **Flight Plan Editor**, click the map to add waypoints, and drag them to adjust your route.
+
+Save the flight plan as a `.cfg` file in `GameData/MechJebWaypointNavigator/`.
+
+**Tip:** Chrome and Edge can open and save `FlightPlans.cfg` directly. In Firefox, download the generated CFG and move it into the folder manually.
 
 ![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight%20Plan%20Editor%20Screenshot.png)
 
-2. **In flight**:
-   1. Open **Plans**, refresh the files, choose your route.
-   2. **MechJeb Aircraft Autopilot**: turn on MechJeb Aircraft Autopilot.
-      - In MechJeb, set the BankAngle and RollLimit, Altitude and Speed (to prevent Overshoot). 
-   3. **Waypoint Navigator**: press NAV on, and it should read `NAV engaged`.
+**2. Set up MechJeb**
 
-The navigator works only while **MechJeb Aircraft Autopilot is on**. It controls **roll and yaw**.
+In flight, enable **MechJeb Aircraft Autopilot**.
+
+Configure your desired altitude, speed, **BankAngle**, and **RollLimit**. Higher bank limits allow tighter turns and reduce waypoint overshoot.
+
+**3. Engage navigation**
+
+Open **Waypoint Navigator → Plans**, refresh the files, and select your flight plan.
+
+Press **NAV on**. The window should display `NAV engaged`.
+
+That's it! Your aircraft will follow the waypoints automatically.
 
 ![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](Screenshots/MechJebWaypointNavigator%20Screenshot.png)
 
-## Notes
+## Good to Know
 
-The navigator’s code tests pass; coordinated flight and the physical bank envelope still need in-game validation. Requested-bank limits do not guarantee actual roll limits. Diagnostic records go to `KSP.log` during NAV.
+- **MechJeb Aircraft Autopilot must remain enabled.** The navigator uses MechJeb for roll and yaw control; altitude and speed remain independently controlled.
+- **F8** shows or hides the Waypoint Navigator window.
+- The navigator's bank limit follows the lower of MechJeb's BankAngle and RollLimit. Actual aircraft bank may exceed the commanded value.
+- Turn predictions are estimates, not guarantees. Very sharp turns at high speeds may overshoot.
+- On updates, **preserve your custom CFG files**.
 
-`Source/` is for development, not installation. Navigator builds require .NET 8, Python 3 and an explicit KSP folder. Editor tests use `Source/Editor/tests/run-macos.py` on macOS. The shared `LICENSE` and `THIRD_PARTY_NOTICES.md` describe licensing and credits.
+## Development & Credits
+
+`Source/` contains development code and tests; it is not needed for installation. Navigator builds require .NET 8, Python 3, and a local KSP installation. Diagnostic records appear in `KSP.log` during NAV.
+
+See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licensing and acknowledgments.
