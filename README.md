@@ -34,7 +34,7 @@ Open **Flight Plan Editor**, click the map to add waypoints, and drag them to ad
 
 Save the flight plan as a `.cfg` file in `GameData/MechJebWaypointNavigator/`.
 
-**Tip:** Chrome and Edge can open and save `FlightPlans.cfg` directly. In Firefox, download the generated CFG and move it into the folder manually.
+**⚠️ Browser compatibility:** Flight Plan Editor only supports **Google Chrome and Microsoft Edge**. **Firefox and Safari are not supported.**
 
 ![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight%20Plan%20Editor%20Screenshot.png)
 
