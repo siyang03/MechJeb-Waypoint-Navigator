@@ -9,31 +9,29 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 ## Download & Install
 
-**1. Download:**
+**1. Download**
 
-- [**Download MechJeb-Waypoint-Navigator (ZIP)**](https://github.com/siyang03/MechJeb-Waypoint-Navigator/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
+[**Download MechJeb-Waypoint-Navigator (ZIP)**](https://github.com/siyang03/MechJeb-Waypoint-Navigator/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
 
-**2. Install Waypoint Navigator**
+**2. Install**
 
-Requires [MechJeb2](https://github.com/MuMech/MechJeb2) and **KSP Harmony 2** (`000_Harmony`, available on CKAN).
+Requires **KSP 1**, [MechJeb2](https://github.com/MuMech/MechJeb2), and **KSP Harmony 2** (`000_Harmony`, available on CKAN).
 
-Extract the ZIP and copy `MechJebWaypointNavigator` into your KSP `GameData` folder.
-
-On updates, replace the plugin files but **keep your existing CFG flight plans**.
+Extract the ZIP and copy `MechJebWaypointNavigator` into your KSP `GameData` folder. On updates, preserve your existing CFG flight plans.
 
 **3. Launch Flight Plan Editor**
 
-Open `GameData/MechJebWaypointNavigator/Launch the Editor.html` in **Chrome or Edge**. No separate installation or internet connection required.
+Open `GameData/MechJebWaypointNavigator/Launch the Editor.html` in **Chrome or Edge**. No installation or internet connection required.
 
 ## Quick Start — Plan & Fly
 
 **1. Draw your route**
 
-Open **Flight Plan Editor**, click the map to add waypoints, and drag them to adjust your route.
+Open **Flight Plan Editor**, click the Kerbin map to add waypoints, and drag them to adjust your route.
 
-Save the flight plan as a `.cfg` file **directly in** `GameData/MechJebWaypointNavigator/` (**not inside any subfolder**) so Waypoint Navigator can load it in-game.
+Save your flight plan as a `.cfg` file directly in `GameData/MechJebWaypointNavigator/` (not inside a subfolder).
 
-**⚠️ Browser compatibility:** Flight Plan Editor only supports **Google Chrome and Microsoft Edge**. **Firefox and Safari are not supported.**
+**⚠️ Browser compatibility:** Only **Chrome and Edge** are supported. Firefox and Safari are not supported.
 
 ![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight_Plan_Editor_Screenshot.png)
 
@@ -41,32 +39,33 @@ Save the flight plan as a `.cfg` file **directly in** `GameData/MechJebWaypointN
 
 In flight, enable **MechJeb Aircraft Autopilot**.
 
-Configure your desired altitude, speed, **BankAngle**, and **RollLimit** in MechJeb. Higher bank limits allow tighter turns and reduce waypoint overshoot.
+Configure your desired altitude, speed, **BankAngle**, and **RollLimit**. Click **Set** to apply changes to BankAngle (a green Set button means the new value hasn't been applied).
 
-The navigator's maximum commanded bank angle is **min(BankAngle, RollLimit)**, using the two values set in MechJeb.
+Higher bank limits allow tighter turns and reduce waypoint overshoot. The Navigator's effective bank limit is **min(BankAngle, RollLimit)**.
 
 **3. Engage navigation**
 
-Open **Waypoint Navigator → Plans**, refresh the files, and select your flight plan.
+Open **Waypoint Navigator → Plans**, refresh the CFG files, and select your flight plan.
 
-Press **NAV on**. The window should display `NAV engaged`.
-
-That's it! Your aircraft will follow the waypoints automatically.
+Press **NAV on**. Your aircraft will follow the waypoints automatically!
 
 ![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](Screenshots/MechJebWaypointNavigator_Screenshot.png)
 
 ## Good to Know
 
-- **MechJeb Aircraft Autopilot must remain enabled.** The navigator uses MechJeb for roll and yaw control; altitude and speed remain independently controlled.
-- **SAS:** NAV turns stock SAS off while engaged and turns it on when navigation ends, including errors and manual MechJeb Heading Hold takeover. Enabling SAS yourself immediately disengages NAV. Waypoint changes during NAV keep SAS off unless the restart fails. MechJeb may override SAS while its own controls remain active.
-- **F8** shows or hides the Waypoint Navigator window.
-- The navigator's bank limit follows the lower of MechJeb's BankAngle and RollLimit. Actual aircraft bank may exceed the commanded value.
-- Turn predictions are estimates, not guarantees. Very sharp turns at high speeds may overshoot.
-- On updates, **preserve your custom CFG files**.
+- **Altitude and speed:** NAV controls horizontal navigation only. Waypoint altitudes are informational; set Altitude Hold and Speed Hold separately in MechJeb.
+- **Bank limits:** NAV displays the live effective limit and its source: `(MechJeb Roll)`, `(MechJeb Bank)`, or `(MechJeb)` when both limits are equal. Actual aircraft bank may exceed the commanded value.
+- **Yaw control:** NAV normally uses MechJeb's yaw stabilization. If incompatible, it falls back to passive aerodynamic yaw stability, which may be less reliable on some aircraft.
+- **SAS:** NAV automatically turns SAS off when engaged and back on when disengaged. Manually enabling SAS or MechJeb Heading Hold disengages NAV.
+- **Waypoints:** Select another waypoint during NAV to redirect the aircraft without interrupting navigation.
+- **Turn predictions:** The editor estimates turn paths using the selected speed and bank angle. These are estimates, not guarantees; high-speed sharp turns may overshoot.
+- **F8** hides or shows the Navigator window.
 
 ## Development & Credits
 
-`Source/` contains development code and tests; it is not needed for installation. Navigator builds require .NET 8, Python 3, and a local KSP installation. Diagnostic records appear in `KSP.log` during NAV.
+`Source/` contains development code, tests, and documentation; it is not needed for installation. Building the Navigator requires .NET 8, Python 3, and a local KSP installation.
+
+Diagnostic records appear in `KSP.log` during NAV.
 
 See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licensing and acknowledgments.
 
