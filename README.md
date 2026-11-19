@@ -68,3 +68,5 @@ That's it! Your aircraft will follow the waypoints automatically.
 `Source/` contains development code and tests; it is not needed for installation. Navigator builds require .NET 8, Python 3, and a local KSP installation. Diagnostic records appear in `KSP.log` during NAV.
 
 See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licensing and acknowledgments.
+
+MechJeb Waypoint Navigator is an independent add-on for MechJeb2 and is not affiliated with or endorsed by the MechJeb development team.
