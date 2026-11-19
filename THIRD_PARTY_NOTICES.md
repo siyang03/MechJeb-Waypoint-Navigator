@@ -8,6 +8,6 @@ The original `George.cs` header also credits Thunder Aerospace Corporation’s K
 
 **Changes:** horizontal guidance was adapted to MechJeb roll control; a scoped hook enables MechJeb yaw stabilization. The editor provides route editing and an estimated flight-path overlay. Vertical, throttle, gear and landing control are excluded. The editor preview simplifies aircraft motion and is not MechJeb’s actuator model.
 
-**Map:** The Kerbin map is adapted from [Micro Map by KerbalMissile](https://github.com/KerbalMissile/Micro-Map), specifically `GameData/MicroMap/Textures/map.png`. That repository is published under the MIT License (see `licenses/Micro-Map-MIT.txt`). The supplied map image was re-encoded as a JPEG for this offline editor. The original provenance of the underlying terrain imagery is not independently verified; no ownership of KSP game assets is claimed.
+**Map:** The Kerbin map is adapted from [Micro Map by KerbalMissile](https://github.com/KerbalMissile/Micro-Map), specifically `GameData/MicroMap/Textures/map.png`. That repository is published under the MIT License (see `licenses/Micro-Map-MIT.txt`). The original PNG is bundled unchanged for use in the offline editor. The original provenance of the underlying terrain imagery is not independently verified; no ownership of KSP game assets is claimed.
 
 **Dependencies:** KSP, MechJeb and KSP Harmony 2 are separate installations and are not bundled. Original independent navigator code retains its MIT notice in `licenses/Original-code-MIT.txt`.
