@@ -61,6 +61,15 @@ Press **NAV on**. Your aircraft will follow the waypoints automatically!
 - **Turn predictions:** The editor estimates turn paths using the selected speed and bank angle. These are estimates, not guarantees; high-speed sharp turns may overshoot.
 - **F8** hides or shows the Navigator window.
 
+
+## Multi-aircraft NAV (v1.2.0, local review)
+
+Each aircraft remembers its CFG, plan and starting waypoint. Engage NAV on A, switch to B, select B's route and engage NAV again. Switching changes the window's controls and readouts; NAV off and waypoint buttons affect only the active aircraft. The compact count shows all running NAV sessions. Each aircraft requires its own enabled MechJeb Aircraft Autopilot and independent altitude/speed setup.
+
+All aircraft must remain loaded and unpacked inside KSP's active physics simulation. NAV automatically disengages on packing/unloading and requires manual reengagement after returning. Physics distance varies with KSP configuration and circumstances. Scene exit cleans up every session; scene reload starts with NAV off. There is no on-rails navigation, collision avoidance or automatic formation keeping.
+
+Automated checks and compilation do not establish simultaneous physical flight. Multi-aircraft flight is **NOT TESTED in KSP**. Use the [manual flight checklist](Source/Navigator/docs/MULTI_VESSEL_TEST_PLAN.md) in a disposable installation/save.
+
 ## Development & Credits
 
 `Source/` contains development code, tests, and documentation; it is not needed for installation. Building the Navigator requires .NET 8, Python 3, and a local KSP installation.

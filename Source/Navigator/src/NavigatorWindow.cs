@@ -8,17 +8,34 @@ namespace WaypointNavigator {
   Rect window=new Rect(220,80,413,338); Vector2 contentScroll;
   GUIStyle wrappedLabel,wrappedButton;
   string folder,fileName="FlightPlans.cfg"; string[] files=new string[0];
-  readonly NavSasSession sasSession=new NavSasSession();
-  readonly Navigation nav=new Navigation(); List<Plan> plans=new List<Plan>();
-  Plan selected; int selectedWaypoint; Vessel vessel; MechJebAdapter adapter;
-  bool engaged,show=true,selector=false; string status="Ready";
-  double nextDiagnostic; double commandedBank;
+  readonly NavSessionRegistry registry=new NavSessionRegistry();
+  readonly Navigation emptyNav=new Navigation();
+  Vessel uiVessel; VesselPlanSelection selection=new VesselPlanSelection();
+  List<Plan> plans {get{return selection.Plans;}set{selection.Plans=value;}}
+  Plan selected {get{return selection.PlanIndex>=0&&selection.PlanIndex<plans.Count?plans[selection.PlanIndex]:null;}set{selection.PlanIndex=plans.IndexOf(value);}}
+  int selectedWaypoint {get{return selection.WaypointIndex;}set{selection.WaypointIndex=value;}}
+  string status {get{var session=registry.Find(uiVessel);return session!=null?session.Status:selection.Status;}set{selection.Status=value;}}
+  NavSession current {get{return registry.Find(uiVessel);}}
+  bool engaged {get{return current!=null&&current.Engaged;}}
+  Navigation nav {get{return current!=null?current.Navigation:emptyNav;}}
+  MechJebAdapter adapter {get{return current!=null?current.Adapter:null;}}
+  Vessel vessel {get{return uiVessel;}}
+  double commandedBank {get{return current!=null?current.CommandedBank:0;}}
+  bool show=true,selector=false;
+  void SyncVessel() {
+   var active=FlightGlobals.ActiveVessel;
+   if(ReferenceEquals(uiVessel,active))return;
+   uiVessel=active;selection=active!=null?registry.Selection(active.id):new VesselPlanSelection();
+   fileName=selection.FileName;emptyNav.Plan=null;selector=false;
+   if(active!=null&&plans.Count==0)LoadFile(fileName);
+  }
   void Start() {
    folder=Path.Combine(KSPUtil.ApplicationRootPath,"GameData/MechJebWaypointNavigator");
-   Refresh();
+   registry.Log=message=>Debug.LogWarning(message);
+   SyncVessel(); Refresh();
   }
   void Refresh() {
-   StopNav("Plans refreshed");
+   // Running sessions retain their private plan snapshots.
    try {
     var found=new List<string>();
     if(Directory.Exists(folder)) foreach(string path in Directory.GetFiles(folder))
@@ -30,14 +47,18 @@ namespace WaypointNavigator {
    } catch(Exception e) { status="Cannot read CFG folder; see KSP log"; Debug.LogWarning("Waypoint Navigator: "+e); }
   }
   void LoadFile(string name) {
-   StopNav("Loading plan"); fileName=name; plans.Clear(); selected=null; selectedWaypoint=0;
+   bool same=selection.FileName==name;
+   string previous=same&&selected!=null?selected.Name:null;
+   int waypoint=same?selectedWaypoint:0;
+   fileName=name; selection.FileName=name; plans.Clear(); selected=null; selectedWaypoint=0;
    try {
     string warning; plans=FlightPlans.Load(Path.Combine(folder,fileName),out warning);
     selected=plans.Count>0?plans[0]:null;
+    if(previous!=null)foreach(var plan in plans)if(plan.Name==previous){selected=plan;break;}
+    if(selected!=null)selectedWaypoint=Math.Max(0,Math.Min(waypoint,selected.Points.Count-1));
     status=warning.Length>0?warning:plans.Count+" plans loaded";
    } catch(Exception e) { status="Cannot load "+fileName+"; see KSP log"; Debug.LogWarning("Waypoint Navigator: "+e); }
   }
-  Geo Position() { return new Geo(vessel.latitude,vessel.longitude); }
   bool Conflict(Vessel v) {
    foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
     if(assembly.GetName().Name.IndexOf("Kramax",StringComparison.OrdinalIgnoreCase)<0) continue;
@@ -47,6 +68,13 @@ namespace WaypointNavigator {
     if(field==null) return true;
     foreach(var addon in UnityEngine.Object.FindObjectsOfType(type)) {
      object pilot=field.GetValue(addon); if(pilot==null) continue;
+     // George publicly binds its controls to one vessel in the supplied Kramax.
+     // Unknown APIs remain conservatively global conflicts.
+     var vesselField=pilot.GetType().GetField("vessel",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public);
+     if(vesselField!=null && vesselField.FieldType==typeof(Vessel)) {
+      var owner=vesselField.GetValue(pilot) as Vessel;
+      if(owner!=null && !ReferenceEquals(owner,v))continue;
+     }
      foreach(string name in new[]{"HrztActive","VertActive","ThrtActive"}) {
       var mode=pilot.GetType().GetField(name,System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic);
       if(mode==null || (bool)mode.GetValue(pilot)) return true;
@@ -56,71 +84,24 @@ namespace WaypointNavigator {
    return false;
   }
   void Engage(bool restart=false) {
-   if(!restart)StopNav("Ready");
+   if(uiVessel==null){status="No active vessel";return;}
    try {
-    if(restart) {
-     if(vessel==null || FlightGlobals.ActiveVessel!=vessel)throw new InvalidOperationException("Vessel changed");
-     if(vessel.ActionGroups[KSPActionGroup.SAS])throw new InvalidOperationException("NAV disengaged: SAS enabled");
-     adapter.CheckOwnership();
-    } else vessel=FlightGlobals.ActiveVessel;
-    if(vessel==null || vessel.packed || vessel.LandedOrSplashed) throw new InvalidOperationException("Engage while airborne in an unpacked vessel");
-    if(selected==null || selected.Points.Count==0) throw new InvalidOperationException("Select a nonempty plan");
-    if(selected.Planet!=vessel.mainBody.bodyName) throw new InvalidOperationException("Plan is for "+selected.Planet);
-    if(Conflict(vessel)) throw new InvalidOperationException("Disengage all Kramax modes before using NAV (or incompatible Kramax API)");
-    if(!restart)adapter=MechJebAdapter.Find(vessel);
-    nav.BankLimit=adapter.EffectiveBankLimit;
-    nav.Start(selected,Position(),vessel.mainBody.Radius,selectedWaypoint,Planetarium.GetUniversalTime());
-    commandedBank=0;
-    if(!restart) {
-     adapter.Acquire();
-     var sessionVessel=vessel;
-     sasSession.Suppress(
-      ()=>sessionVessel!=null&&sessionVessel.ActionGroups[KSPActionGroup.SAS],
-      enabled=>{if(sessionVessel!=null)sessionVessel.ActionGroups.SetGroup(KSPActionGroup.SAS,enabled);});
-    }
-    engaged=true; status=adapter.YawBridgeActive?"NAV engaged — MechJeb roll + yaw (SAS off)":"NAV engaged — Passive yaw fallback (SAS off)";
-   } catch(Exception e) { StopNav(e.GetBaseException().Message); }
-  }
-  void StopNav(string reason) {
-   engaged=false;
-   try {sasSession.End(restore=>{if(adapter!=null)adapter.Release(restore);});}
-   catch(Exception e) {Debug.LogWarning("Waypoint Navigator release/SAS restore: "+e);}
-   adapter=null; status=reason;
-  }
-  void Update() {
-   if(Input.GetKeyDown(KeyCode.F8)) show=!show;
-   if(!engaged)return;
-   try {
-    if(FlightGlobals.ActiveVessel!=vessel || vessel==null || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight || selected.Planet!=vessel.mainBody.bodyName) {StopNav("Vessel or flight state changed");return;}
-    if(vessel.ActionGroups[KSPActionGroup.SAS]) {StopNav("NAV disengaged: SAS enabled");return;}
-    adapter.CheckOwnership();
+    if(restart)current.RestartToWaypoint(selectedWaypoint);
+    else registry.Start(uiVessel,selected,fileName,selectedWaypoint,Conflict);
    } catch(Exception e) {StopNav(e.GetBaseException().Message);}
   }
-
-  void FixedUpdate() {
-   if(!engaged) return;
-   try {
-    if(vessel==null || FlightGlobals.ActiveVessel!=vessel || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight) { StopNav("Vessel or flight state changed"); return; }
-    if(vessel.ActionGroups[KSPActionGroup.SAS]) { StopNav("NAV disengaged: SAS enabled"); return; }
-    if(Conflict(vessel)) throw new InvalidOperationException("Kramax activated; NAV released");
-    adapter.CheckOwnership();
-    nav.BankLimit=adapter.EffectiveBankLimit;
-    nav.Step(Position(),vessel.srfSpeed,Planetarium.GetUniversalTime(),TimeWarp.fixedDeltaTime);
-    if(nav.Complete) { selectedWaypoint=nav.Active; StopNav("Route complete"); return; }
-    selectedWaypoint=nav.Active;
-    if(nav.HasDemand) commandedBank=adapter.WriteBank(nav.TurnDemand);
-    if(Time.realtimeSinceStartup>=nextDiagnostic) {
-     nextDiagnostic=Time.realtimeSinceStartup+5;
-     try { Debug.Log("Waypoint Navigator telemetry: wp="+nav.Active+" xte="+nav.CrossTrack.ToString("F1")+
-      " lateralVelocity="+nav.CrossTrackVelocity.ToString("F1")+" desiredLateral="+nav.DesiredCrossTrackVelocity.ToString("F1")+
-      " turnDemand="+nav.TurnDemand.ToString("F1")+" "+adapter.Diagnostic()); }
-     catch(Exception e) { Debug.LogWarning("Waypoint Navigator telemetry unavailable: "+e.Message); }
-    }
-   } catch(Exception e) { StopNav(e.GetBaseException().Message); }
+  void StopNav(string reason) {if(uiVessel!=null)registry.Stop(uiVessel.id,reason);status=reason;}
+  void Update() {
+   if(Input.GetKeyDown(KeyCode.F8))show=!show;
+   registry.Run(false);SyncVessel();
   }
-  void OnDisable() { StopNav("Navigator disabled"); }
-  void OnDestroy() { StopNav("Left flight"); }
+  void FixedUpdate() {
+   registry.Run(true);
+  }
+  void OnDisable() {registry.StopAll("Navigator disabled");}
+  void OnDestroy() {registry.StopAll("Left flight");}
   void OnGUI() {
+   SyncVessel();
    if(!show) return;
    if(wrappedLabel==null) {
     wrappedLabel=new GUIStyle(GUI.skin.label) {wordWrap=true};
@@ -144,8 +125,9 @@ namespace WaypointNavigator {
    GUILayout.EndHorizontal();
    // A fixed viewport keeps long routes, filenames and diagnostics inside the compact window.
    contentScroll=GUILayout.BeginScrollView(contentScroll,GUILayout.Width(393),GUILayout.Height(278));
+   Label("Active NAV sessions: "+registry.Count);
    Label(status);
-   Label(selected==null?"No plan":"Plan: "+selected.Name);
+   Label(current!=null?"Plan: "+current.Plan.Name:selected==null?"No plan":"Plan: "+selected.Name);
    Divider();
    if(selector) {
     if(GUILayout.Button("Refresh CFG files",GUILayout.Width(363))) Refresh();
@@ -159,17 +141,18 @@ namespace WaypointNavigator {
     }
     Divider();
    }
-   if(selected!=null) {
+   var displayed=current!=null?current.Plan:selected;
+   if(displayed!=null && displayed.Points.Count>0) {
     var active=FlightGlobals.ActiveVessel;
     double r=active!=null?active.mainBody.Radius:0;
-    bool session=nav.Plan==selected && active!=null && active==vessel;
-    int activeIndex=session?nav.Active:selectedWaypoint;
-    Label("Active: "+(activeIndex+1)+". "+selected.Points[activeIndex].Name);
+    bool session=nav.Plan==displayed && active!=null && active==vessel;
+    int activeIndex=session?nav.Active:Math.Max(0,Math.Min(selectedWaypoint,displayed.Points.Count-1));
+    Label("Active: "+(activeIndex+1)+". "+displayed.Points[activeIndex].Name);
     string targetBank=session && engaged?commandedBank.ToString("+0;-0;0")+"°":"—";
     string currentHeading=active!=null?FlightGlobals.ship_heading.ToString("F0")+"°":"—";
     string waypointDirection="—";
-    if(active!=null && selected.Planet==active.mainBody.bodyName) {
-     Geo waypoint=selected.Points[session?nav.Active:selectedWaypoint].Position;
+    if(active!=null && displayed.Planet==active.mainBody.bodyName) {
+     Geo waypoint=displayed.Points[activeIndex].Position;
      Geo here=new Geo(active.latitude,active.longitude);
      if(Sphere.Distance(here,waypoint,r)>0.01) waypointDirection=Sphere.Bearing(here,waypoint).ToString("F0")+"°";
     }
@@ -197,13 +180,13 @@ namespace WaypointNavigator {
      Label("Course deviation: —");
      Divider();
      Label("WP "+(activeIndex+1)+" remaining: —");
-     Label("Route progress: 0 / "+(nav.StoredTotal(selected,r)/1000).ToString("F0")+" km");
+     Label("Route progress: 0 / "+(nav.StoredTotal(displayed,r)/1000).ToString("F0")+" km");
     }
-    for(int i=0;i<selected.Points.Count;i++) {
-     var wp=selected.Points[i];
-     if(GUILayout.Button((nav.Plan==selected && nav.Active==i?"> ":"")+(i==selectedWaypoint?"• ":"")+(i+1)+". "+wp.Name+" | "+wp.Altitude.ToString("F0")+" m",wrappedButton,GUILayout.Width(363))) ChooseWaypoint(i);
+    for(int i=0;i<displayed.Points.Count;i++) {
+     var wp=displayed.Points[i];
+     if(GUILayout.Button((nav.Plan==displayed && nav.Active==i?"> ":"")+(i==selectedWaypoint?"• ":"")+(i+1)+". "+wp.Name+" | "+wp.Altitude.ToString("F0")+" m",wrappedButton,GUILayout.Width(363))) ChooseWaypoint(i);
     }
-    if(!string.IsNullOrEmpty(selected.Description)) Label(selected.Description);
+    if(!string.IsNullOrEmpty(displayed.Description)) Label(displayed.Description);
    }
    Label("Altitude: display only.");
    GUILayout.EndScrollView();
