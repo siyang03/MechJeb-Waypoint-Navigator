@@ -84,9 +84,16 @@ class Tests {
   foreach(double invalid in new[]{-1.0,double.NaN,double.PositiveInfinity}){bool rejected=false;try{unrestricted.BankLimit=invalid;}catch(ArgumentOutOfRangeException){rejected=true;}Check(rejected,"Invalid bank authority rejected");}
   // MechJeb remains the only aircraft roll controller, with no heading conversion.
   var core=new MuMech.MechJebCore();var part=new Part();part.Modules.Add(core);var vessel=new Vessel();vessel.parts.Add(part);var adapter=MechJebAdapter.Find(vessel);var ap=core.Airplane;
+  Check(adapter.BankLimitSource=="(MechJeb Bank)","Disengaged bank setting restricts limit");
+  ap.BankAngle=60;ap.RollLimit.Val=30;
+  Check(adapter.BankLimitSource=="(MechJeb Roll)","Live roll setting restricts limit");Equal(adapter.EffectiveBankLimit,30,"Roll effective limit unchanged");
+  ap.BankAngle=ap.RollLimit.Val=45;
+  Check(adapter.BankLimitSource=="(MechJeb)","Equal limits show shared source");Equal(adapter.EffectiveBankLimit,45,"Equal effective limit unchanged");
+  ap.BankAngle=45.0000005;Check(adapter.BankLimitSource=="(MechJeb)","Near equal limits use tolerance");
+  ap.BankAngle=25;ap.RollLimit.Val=45;
   adapter.Acquire();Check(!ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Native MechJeb roll mode acquired");Check(MechJebYawBridge.YawEnabled(ap),"Yaw loop enabled during NAV roll hold");
   Equal(adapter.WriteBank(20),20,"Kramax demand passed without ramp");Equal(ap.RollTarget,20,"Native roll setpoint written");
-  ap.RollLimit.Val=12;Equal(adapter.WriteBank(30),12,"MechJeb authority limit retained");adapter.Release();Check(!MechJebYawBridge.YawEnabled(ap),"Yaw extension removed on release");Check(!ap.RollHoldEnabled,"Owned hold released");Equal(ap.BankAngle,25,"Bank setting untouched");Equal(ap.RollLimit.Val,12,"Roll limit untouched");
+  ap.RollLimit.Val=12;Check(adapter.BankLimitSource=="(MechJeb Roll)","Engaged label follows live roll change");Equal(adapter.WriteBank(30),12,"MechJeb authority limit retained");adapter.Release();Check(!MechJebYawBridge.YawEnabled(ap),"Yaw extension removed on release");Check(!ap.RollHoldEnabled,"Owned hold released");Equal(ap.BankAngle,25,"Bank setting untouched");Equal(ap.RollLimit.Val,12,"Roll limit untouched");
   ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;core.VesselState.currentHeading=280;adapter.Acquire();adapter.WriteBank(-10);adapter.Release();Check(ap.HeadingHoldEnabled,"Previous heading mode restored");Check(MechJebYawBridge.YawEnabled(ap),"Normal MechJeb heading yaw remains enabled");Equal(ap.HeadingTarget,280,"No stale heading restored");
   adapter.Acquire();ap.RollTarget=15;bool threw=false;try{adapter.WriteBank(10);}catch(InvalidOperationException){threw=true;}Check(threw,"Manual roll override detected");Check(!MechJebYawBridge.YawEnabled(ap),"Manual override disables bridge immediately");adapter.Release();Equal(ap.RollTarget,15,"Manual target preserved");
   Equal(ap.AltitudeTarget,10050,"Altitude untouched");Equal(ap.SpeedTarget,285,"Speed untouched");

@@ -15,9 +15,14 @@ namespace WaypointNavigator {
    throw new InvalidOperationException("No compatible MechJeb aircraft controller on this vessel");
   }
   void CheckConflict(){if(!(bool)Get(core,"running"))throw new InvalidOperationException("MechJeb disabled");object attitude=Get(core,"Attitude");if(attitude!=null&&(bool)Get(attitude,"Enabled"))throw new InvalidOperationException("Disengage other MechJeb attitude control before NAV");}
-  public double EffectiveBankLimit {get {
-   object r=Get(controller,"RollLimit");double roll=r is double?(double)r:Convert.ToDouble(Get(r,"Val"));double bank=(double)Get(controller,"BankAngle");
-   if(double.IsNaN(roll)||double.IsInfinity(roll)||double.IsNaN(bank)||double.IsInfinity(bank)||roll<0||bank<0)throw new InvalidOperationException("Invalid MechJeb bank limit");return Math.Min(roll,bank);
+  void ReadBankLimits(out double roll,out double bank) {
+   object r=Get(controller,"RollLimit");roll=r is double?(double)r:Convert.ToDouble(Get(r,"Val"));bank=(double)Get(controller,"BankAngle");
+   if(double.IsNaN(roll)||double.IsInfinity(roll)||double.IsNaN(bank)||double.IsInfinity(bank)||roll<0||bank<0)throw new InvalidOperationException("Invalid MechJeb bank limit");
+  }
+  public double EffectiveBankLimit {get {double roll,bank;ReadBankLimits(out roll,out bank);return Math.Min(roll,bank);}}
+  public string BankLimitSource {get {
+   double roll,bank;ReadBankLimits(out roll,out bank);
+   return Math.Abs(roll-bank)<=0.000001?"(MechJeb)":roll<bank?"(MechJeb Roll)":"(MechJeb Bank)";
   }}
   public double CurrentHeading {get{return (double)Get(Get(core,"VesselState"),"currentHeading");}}
   public double ActualBank {get{return -(double)Get(Get(core,"VesselState"),"currentRoll");}}

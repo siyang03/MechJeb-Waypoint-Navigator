@@ -177,7 +177,7 @@ namespace WaypointNavigator {
     try {
      var reader=active!=null?(active==vessel&&adapter!=null?adapter:MechJebAdapter.Find(active)):null;
      if(reader!=null) {
-      bankLimit="±"+reader.EffectiveBankLimit.ToString("F0")+"°";
+      bankLimit="±"+reader.EffectiveBankLimit.ToString("F0")+"° "+reader.BankLimitSource;
       double bank=reader.ActualBank;
       if(!double.IsNaN(bank)&&!double.IsInfinity(bank))currentBank=bank.ToString("+0;-0;0")+"°";
      }
