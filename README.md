@@ -1,4 +1,4 @@
-# Kerbin Waypoint Toolkit
+# MechJeb Waypoint Navigator
 
 **Draw a flight route on a Kerbin map. Let your aircraft fly it automatically.**
 
@@ -11,7 +11,7 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 **1. Download:**
 
-- [**Download Waypoint Navigator + Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
+- [**Download MechJeb-Waypoint-Navigator (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
 
 **2. Install Waypoint Navigator**
 
