@@ -1,14 +1,17 @@
-Kerbin Waypoint Toolkit — shared distribution license notice
+MechJeb Waypoint Navigator — Distribution License Notice
 
-The Kramax-derived navigator and adapted editor prediction code are provided
-under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International:
+The Kramax-derived navigator and adapted editor prediction code are provided under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0):
 https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-See THIRD_PARTY_NOTICES.md and licenses/Kramax-LICENSE.txt for upstream credits
-and terms. Original independent navigator code retains the notice in
-licenses/Original-code-MIT.txt. This does not relicense Kramax code under MIT.
+See THIRD_PARTY_NOTICES.md and licenses/Kramax-LICENSE.txt for upstream credits and terms. Original independent navigator code retains its MIT license notice in licenses/Original-code-MIT.txt. This does not relicense Kramax-derived code under MIT.
 
-Other editor files retain their existing rights/terms. The map is adapted
-from the MIT-licensed Micro Map project (licenses/Micro-Map-MIT.txt); no
-ownership of underlying game assets is claimed. No KSP, MechJeb or Harmony
-binary is redistributed. RCTestFlight is credited as inspiration only.
+Other editor files retain their respective rights and license terms.
+
+The bundled KerbinMap.png is an unchanged copy of the map distributed by the Micro Map project by KerbalMissile:
+https://github.com/KerbalMissile/Micro-Map
+
+Micro Map is published under the MIT License, preserved in licenses/Micro-Map-MIT.txt. The provenance and rights of the underlying KSP-derived terrain imagery have not been independently verified, and no ownership of those assets is claimed.
+
+Optional high-resolution maps supplied separately are not included in this distribution and remain subject to their respective copyright and licensing terms.
+
+KSP, MechJeb and Harmony binaries are not redistributed. RCTestFlight is credited as inspiration only; no affiliation or endorsement is implied.
