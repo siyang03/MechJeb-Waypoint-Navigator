@@ -55,7 +55,7 @@ See [docs/GUIDANCE.md](docs/GUIDANCE.md) for the source mapping and **THIRD_PART
 
 Your supplied `KSP_osx`, `Kramax`, `MechJeb`, and suggestions folders remain development/reference material. They are not release packages.
 
-## Multi-aircraft NAV (v1.2.0, local review)
+## Multi-aircraft NAV
 
 Each aircraft remembers its CFG, plan and starting waypoint. Engage NAV on A, switch to B, select B's route and engage NAV again. Switching changes the window's controls and readouts; NAV off and waypoint buttons affect only the active aircraft. The compact count shows all running NAV sessions. Each aircraft requires its own enabled MechJeb Aircraft Autopilot and independent altitude/speed setup.
 
