@@ -178,13 +178,39 @@ canvas.addEventListener('pointerup',e=>{if(!gesture||gesture.id!==e.pointerId)re
 canvas.addEventListener('pointercancel',()=>{if(gesture?.hit>=0)restore(gesture.before);gesture=null;});
 new ResizeObserver(()=>{fit();}).observe($('mapBox'));
 render();fit();
-// The fixed user-provided map ships in assets/ and works directly over file://.
-const bundledMap=new Image();
-bundledMap.onload=()=>{
-  image=bundledMap;width=bundledMap.naturalWidth;height=bundledMap.naturalHeight;
-  $('mapEmpty').hidden=true;fit();render();
-  message('Kerbin map loaded. Click to add waypoints or open a CFG file.');
-};
-bundledMap.onerror=()=>{ $('mapEmpty').querySelector('strong').textContent='Kerbin map unavailable';message('Could not load KerbinMap.png. Restore assets/KerbinMap.png, then reload the editor.',true); };
-bundledMap.src='assets/KerbinMap.png';
+// Prefer an optional high-resolution map; use the bundled MIT map if unavailable.
+// Relative file:// paths work without a server or absolute installation path.
+function loadKerbinMap(file, highResolution) {
+  const map = new Image();
+  map.onload = () => {
+    image = map;
+    width = map.naturalWidth;
+    height = map.naturalHeight;
+    $('mapEmpty').hidden = true;
+
+    // Credit the actual map being displayed, not just the bundled default.
+    const credit = document.querySelector('.map-credit a');
+    if (credit) {
+      credit.href = highResolution
+        ? 'https://smooney.space/mapdownloads/'
+        : 'https://github.com/KerbalMissile/Micro-Map';
+      credit.textContent = highResolution
+        ? 'Kerbin map by Smooney'
+        : 'Micro Map by KerbalMissile (MIT)';
+    }
+    fit();
+    render();
+    message('Kerbin map loaded. Click to add waypoints or open a CFG file.');
+  };
+  map.onerror = () => {
+    if (highResolution) {
+      loadKerbinMap('assets/KerbinMap.png', false);
+    } else {
+      $('mapEmpty').querySelector('strong').textContent = 'Kerbin map unavailable';
+      message('Could not load KerbinMap.png. Restore assets/KerbinMap.png, then reload the editor.', true);
+    }
+  };
+  map.src = file;
+}
+loadKerbinMap('assets/KerbinMapHighResolution.jpeg', true);
 
