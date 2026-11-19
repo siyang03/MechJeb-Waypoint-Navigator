@@ -11,8 +11,7 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 **1. Download:**
 
-- [**Waypoint Navigator (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/Waypoint-Navigator.zip)
-- [**Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/Flight-Plan-Editor.zip)
+- [**Waypoint Navigator + Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/archive/refs/heads/main.zip)
 
 **2. Install Waypoint Navigator**
 
@@ -24,7 +23,7 @@ On updates, replace the plugin files but **keep your existing CFG flight plans**
 
 **3. Launch Flight Plan Editor**
 
-Extract the ZIP anywhere and open `Flight Plan Editor/Launch the Editor.html` in your browser. No installation or internet connection required.
+Open `GameData/MechJebWaypointNavigator/Launch the Editor.html` in **Chrome or Edge**. No separate installation or internet connection required.
 
 ## Quick Start — Plan & Fly
 
@@ -32,7 +31,7 @@ Extract the ZIP anywhere and open `Flight Plan Editor/Launch the Editor.html` in
 
 Open **Flight Plan Editor**, click the map to add waypoints, and drag them to adjust your route.
 
-Save the flight plan as a `.cfg` file in `GameData/MechJebWaypointNavigator/`.
+Save the flight plan as a `.cfg` file **directly in** `GameData/MechJebWaypointNavigator/` (**not inside any subfolder**) so Waypoint Navigator can load it in-game.
 
 **⚠️ Browser compatibility:** Flight Plan Editor only supports **Google Chrome and Microsoft Edge**. **Firefox and Safari are not supported.**
 
