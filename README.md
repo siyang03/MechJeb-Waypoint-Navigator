@@ -11,7 +11,7 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 **1. Download:**
 
-- [**Waypoint Navigator + Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/archive/refs/heads/main.zip)
+- [**Download Waypoint Navigator + Flight Plan Editor (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
 
 **2. Install Waypoint Navigator**
 
