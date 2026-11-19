@@ -36,7 +36,7 @@ Save the flight plan as a `.cfg` file in `GameData/MechJebWaypointNavigator/`.
 
 **⚠️ Browser compatibility:** Flight Plan Editor only supports **Google Chrome and Microsoft Edge**. **Firefox and Safari are not supported.**
 
-![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight%20Plan%20Editor%20Screenshot.png)
+![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight_Plan_Editor_Screenshot.png)
 
 **2. Set up MechJeb**
 
@@ -54,7 +54,7 @@ Press **NAV on**. The window should display `NAV engaged`.
 
 That's it! Your aircraft will follow the waypoints automatically.
 
-![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](Screenshots/MechJebWaypointNavigator%20Screenshot.png)
+![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](Screenshots/MechJebWaypointNavigator_Screenshot.png)
 
 ## Good to Know
 
