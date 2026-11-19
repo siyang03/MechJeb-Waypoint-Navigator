@@ -1,8 +1,0 @@
-CURRENT INSTALL FILES
-
-Copy GameData/MechJebWaypointNavigator into your KSP GameData folder.
-Quit KSP before replacing the plugin. Preserve your existing CFG files.
-
-This is the only installable folder in dist.
-The matching ZIP is ../releases/MechJebWaypointNavigator.zip.
-BUILD.json records this DLL checksum and its source checksums.

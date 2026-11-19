@@ -11,7 +11,7 @@ REF_VERSION="$(ls "$REF_ROOT" | sort -V | tail -1)"
 refs=(); for file in "$REF_ROOT/$REF_VERSION/ref/"*/*.dll; do refs+=("-r:$file"); done
 mkdir -p build/tests
 python3 tools/prepare-kramax-reference.py
-"$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" -out:build/tests/Tests.dll src/Navigation.cs src/KramaxGeometry.cs src/KramaxVelocityPid.cs src/MechJebAdapter.cs src/MechJebYawBridge.cs src/UnsupportedYawBridgeException.cs tests/BridgeInstallerStub.cs tests/Program.cs build/tests/UpstreamOracle.cs
+"$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" -out:build/tests/Tests.dll src/Navigation.cs src/KramaxGeometry.cs src/KramaxVelocityPid.cs src/NavSasSession.cs src/MechJebAdapter.cs src/MechJebYawBridge.cs src/UnsupportedYawBridgeException.cs tests/BridgeInstallerStub.cs tests/SasSessionTests.cs tests/Program.cs build/tests/UpstreamOracle.cs
 cat > build/tests/Tests.runtimeconfig.json <<'JSON'
 {"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.NETCore.App","version":"8.0.0"},"rollForward":"LatestMajor"}}
 JSON

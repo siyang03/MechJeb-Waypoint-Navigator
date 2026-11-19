@@ -1,9 +1,0 @@
-This distribution includes an adaptation of Kramax AutoPilot / Pilot Assistant.
-The adapted navigation files and combined distribution are provided under the
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License:
-https://creativecommons.org/licenses/by-nc-sa/4.0/
-
-See THIRD_PARTY_NOTICES.md and third_party/Kramax/LICENSE.txt for attribution,
-upstream notices, and the specific source and modifications. Original independently
-authored code also retains its notice in LICENSE.MIT-original. That MIT notice does
-not relicense the Kramax-derived code. No KSP or MechJeb assembly is redistributed.

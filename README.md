@@ -58,6 +58,7 @@ That's it! Your aircraft will follow the waypoints automatically.
 ## Good to Know
 
 - **MechJeb Aircraft Autopilot must remain enabled.** The navigator uses MechJeb for roll and yaw control; altitude and speed remain independently controlled.
+- **SAS:** NAV turns stock SAS off while engaged and turns it on when navigation ends, including errors and manual MechJeb Heading Hold takeover. Enabling SAS yourself immediately disengages NAV. Waypoint changes during NAV keep SAS off unless the restart fails. MechJeb may override SAS while its own controls remain active.
 - **F8** shows or hides the Waypoint Navigator window.
 - The navigator's bank limit follows the lower of MechJeb's BankAngle and RollLimit. Actual aircraft bank may exceed the commanded value.
 - Turn predictions are estimates, not guarantees. Very sharp turns at high speeds may overshoot.

@@ -2,3 +2,7 @@
 MechJeb-Waypoint-Navigator/
 MechJeb-Waypoint-Navigator.zip
 
+
+/Source/Navigator/build/
+/Source/Navigator/dist/
+/Source/Navigator/releases/

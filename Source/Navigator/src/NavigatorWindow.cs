@@ -8,6 +8,7 @@ namespace WaypointNavigator {
   Rect window=new Rect(220,80,413,338); Vector2 contentScroll;
   GUIStyle wrappedLabel,wrappedButton;
   string folder,fileName="FlightPlans.cfg"; string[] files=new string[0];
+  readonly NavSasSession sasSession=new NavSasSession();
   readonly Navigation nav=new Navigation(); List<Plan> plans=new List<Plan>();
   Plan selected; int selectedWaypoint; Vessel vessel; MechJebAdapter adapter;
   bool engaged,show=true,selector=false; string status="Ready";
@@ -54,44 +55,55 @@ namespace WaypointNavigator {
    }
    return false;
   }
-  void Engage() {
-   StopNav("Ready");
+  void Engage(bool restart=false) {
+   if(!restart)StopNav("Ready");
    try {
-    vessel=FlightGlobals.ActiveVessel;
+    if(restart) {
+     if(vessel==null || FlightGlobals.ActiveVessel!=vessel)throw new InvalidOperationException("Vessel changed");
+     if(vessel.ActionGroups[KSPActionGroup.SAS])throw new InvalidOperationException("NAV disengaged: SAS enabled");
+     adapter.CheckOwnership();
+    } else vessel=FlightGlobals.ActiveVessel;
     if(vessel==null || vessel.packed || vessel.LandedOrSplashed) throw new InvalidOperationException("Engage while airborne in an unpacked vessel");
     if(selected==null || selected.Points.Count==0) throw new InvalidOperationException("Select a nonempty plan");
     if(selected.Planet!=vessel.mainBody.bodyName) throw new InvalidOperationException("Plan is for "+selected.Planet);
     if(Conflict(vessel)) throw new InvalidOperationException("Disengage all Kramax modes before using NAV (or incompatible Kramax API)");
-    adapter=MechJebAdapter.Find(vessel);nav.BankLimit=adapter.EffectiveBankLimit;
+    if(!restart)adapter=MechJebAdapter.Find(vessel);
+    nav.BankLimit=adapter.EffectiveBankLimit;
     nav.Start(selected,Position(),vessel.mainBody.Radius,selectedWaypoint,Planetarium.GetUniversalTime());
     commandedBank=0;
-    adapter.Acquire();
-    vessel.ActionGroups.SetGroup(KSPActionGroup.SAS,false);
-    if(vessel.ActionGroups[KSPActionGroup.SAS])throw new InvalidOperationException("Cannot disable SAS; NAV not engaged");
+    if(!restart) {
+     adapter.Acquire();
+     var sessionVessel=vessel;
+     sasSession.Suppress(
+      ()=>sessionVessel!=null&&sessionVessel.ActionGroups[KSPActionGroup.SAS],
+      enabled=>{if(sessionVessel!=null)sessionVessel.ActionGroups.SetGroup(KSPActionGroup.SAS,enabled);});
+    }
     engaged=true; status=adapter.YawBridgeActive?"NAV engaged — MechJeb roll + yaw (SAS off)":"NAV engaged — Passive yaw fallback (SAS off)";
    } catch(Exception e) { StopNav(e.GetBaseException().Message); }
   }
   void StopNav(string reason) {
    engaged=false;
-   try { if(adapter!=null) {
-    // If SAS cannot be read, conservatively avoid restoring competing holds.
-    bool restore=false;
-    try {restore=vessel!=null&&!vessel.ActionGroups[KSPActionGroup.SAS];}
-    finally {adapter.Release(restore);}
-   } } catch(Exception e) { Debug.LogWarning("Waypoint Navigator release: "+e.Message); }
+   try {sasSession.End(restore=>{if(adapter!=null)adapter.Release(restore);});}
+   catch(Exception e) {Debug.LogWarning("Waypoint Navigator release/SAS restore: "+e);}
    adapter=null; status=reason;
   }
   void Update() {
    if(Input.GetKeyDown(KeyCode.F8)) show=!show;
-   if(engaged && (FlightGlobals.ActiveVessel!=vessel || vessel==null || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight || selected.Planet!=vessel.mainBody.bodyName)) StopNav("Vessel or flight state changed");
-   if(engaged && vessel.ActionGroups[KSPActionGroup.SAS]) StopNav("NAV disengaged: SAS enabled");
+   if(!engaged)return;
+   try {
+    if(FlightGlobals.ActiveVessel!=vessel || vessel==null || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight || selected.Planet!=vessel.mainBody.bodyName) {StopNav("Vessel or flight state changed");return;}
+    if(vessel.ActionGroups[KSPActionGroup.SAS]) {StopNav("NAV disengaged: SAS enabled");return;}
+    adapter.CheckOwnership();
+   } catch(Exception e) {StopNav(e.GetBaseException().Message);}
   }
+
   void FixedUpdate() {
    if(!engaged) return;
    try {
     if(vessel==null || FlightGlobals.ActiveVessel!=vessel || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight) { StopNav("Vessel or flight state changed"); return; }
     if(vessel.ActionGroups[KSPActionGroup.SAS]) { StopNav("NAV disengaged: SAS enabled"); return; }
     if(Conflict(vessel)) throw new InvalidOperationException("Kramax activated; NAV released");
+    adapter.CheckOwnership();
     nav.BankLimit=adapter.EffectiveBankLimit;
     nav.Step(Position(),vessel.srfSpeed,Planetarium.GetUniversalTime(),TimeWarp.fixedDeltaTime);
     if(nav.Complete) { selectedWaypoint=nav.Active; StopNav("Route complete"); return; }
@@ -120,7 +132,7 @@ namespace WaypointNavigator {
   }
   void ChooseWaypoint(int index) {
    selectedWaypoint=index;
-   if(engaged) Engage();
+   if(engaged) Engage(true);
    else { nav.Plan=null; status="Target selected: "+selected.Points[index].Name; }
   }
   void Divider() { GUILayout.Box("",GUILayout.Width(363),GUILayout.Height(1)); }

@@ -123,6 +123,7 @@ class Tests {
   Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Partial acquisition leaves no yaw ownership");
   adapter.Release(false);ap.SkipRollInitialization=false;HarmonyYawPatch.Failure=null;
   ap.Enabled=false;threw=false;try{adapter.Acquire();}catch(InvalidOperationException){threw=true;}Check(threw,"Disabled autopilot rejected");
+  SasSessionTests.Run(Check);
   Console.WriteLine(checks+" assertions passed, including differential tests against upstream geometry, Course PID and sequencing. No flight test.");
  }
 }

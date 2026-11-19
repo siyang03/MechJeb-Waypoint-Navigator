@@ -35,8 +35,11 @@ namespace WaypointNavigator {
    }catch{Release();throw;}
   }
   bool OwnsRoll(){CheckConflict();return acquired&&(bool)Get(core,"running")&&(bool)Get(controller,"Enabled")&&!(bool)Get(controller,"HeadingHoldEnabled")&&(bool)Get(controller,"RollHoldEnabled")&&Math.Abs((double)Get(controller,"RollTarget")-lastRollTarget)<0.001;}
-  public double WriteBank(double demand) {
+  public void CheckOwnership() {
    CheckConflict();if(!acquired||!(bool)Get(controller,"Enabled")||!(bool)Get(controller,"RollHoldEnabled")||(bool)Get(controller,"HeadingHoldEnabled")||Math.Abs((double)Get(controller,"RollTarget")-lastRollTarget)>0.001)throw new InvalidOperationException("MechJeb horizontal mode changed; NAV released");
+  }
+  public double WriteBank(double demand) {
+   CheckOwnership();
    if(double.IsNaN(demand)||double.IsInfinity(demand))throw new InvalidOperationException("Invalid Kramax bank demand");
    // MechJeb itself clamps RollTarget by these limits. Mirror that limit for the UI.
    demand=Sphere.Clamp(demand,-EffectiveBankLimit,EffectiveBankLimit);Set(controller,"RollTarget",demand);lastRollTarget=demand;return demand;
