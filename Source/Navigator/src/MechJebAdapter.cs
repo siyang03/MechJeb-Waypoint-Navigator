@@ -14,6 +14,8 @@ namespace WaypointNavigator {
    }
    throw new InvalidOperationException("No compatible MechJeb aircraft controller on this vessel");
   }
+  public object Controller {get{return controller;}}
+  public bool Matches(Vessel vessel) {var current=Find(vessel);return ReferenceEquals(core,current.core)&&ReferenceEquals(controller,current.controller);}
   void CheckConflict(){if(!(bool)Get(core,"running"))throw new InvalidOperationException("MechJeb disabled");object attitude=Get(core,"Attitude");if(attitude!=null&&(bool)Get(attitude,"Enabled"))throw new InvalidOperationException("Disengage other MechJeb attitude control before NAV");}
   void ReadBankLimits(out double roll,out double bank) {
    object r=Get(controller,"RollLimit");roll=r is double?(double)r:Convert.ToDouble(Get(r,"Val"));bank=(double)Get(controller,"BankAngle");

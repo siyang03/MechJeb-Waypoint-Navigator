@@ -33,7 +33,7 @@ Coincident legs under 1 mm are skipped to avoid division by zero. Final completi
 
 ## Validation
 
-4,553 core assertions and 256 yaw-bridge/profile assertions pass, including original-code comparisons for geometry, PID state, sequencing and a 200-position replay. Real KSP CFG tests also pass. These are code-level checks, not a flight test or proof that physical overbank is fixed.
+4,657 core/session assertions (including 42 multi-vessel assertions) and 256 yaw-bridge/profile assertions pass, including original-code comparisons for geometry, PID state, sequencing and a 200-position replay. Real KSP CFG tests also pass. These are code-level checks, not a flight test or proof that physical overbank is fixed.
 
 ## Yaw bridge
 
@@ -46,3 +46,33 @@ Compatibility is checked using SHA-256 of the installed `Drive` and `ComputeYaw`
 The 256 bridge tests check the transpiler, unknown-layout rejection, normal-mode preservation, installed IL hashes/gates and zero-sideslip left/right heading changes. Core tests check yaw ownership and immediate override/release. They do not run the actual detour in KSP or test aerodynamic rudder response.
 
 The UI now has NAV on/off and Plans controls only. The redundant Pause/Resume and Guidance panel were removed. The bank row includes the live MechJeb limit; the navigation PID output cap now follows that live limit rather than retaining Kramax’s fixed ±30° cap.
+
+
+## v1.2.0 session lifecycle
+
+One flight-scene window owns a NavSessionRegistry keyed by Vessel.id, plus per-vessel VesselPlanSelection records. Each NavSession holds the original Vessel reference, body and parts snapshot, a deep plan snapshot, Navigation (including its PID), adapter and SAS suppression obligation. No navigation state is shared. Refreshing a foreground CFG cannot replace a running route. Selections remain local to this flight-scene instance; they are not persisted in saves.
+
+Start validates physics/identity/body/conflicts, rejects duplicate vessel/controller ownership, initializes guidance, acquires native MechJeb roll and suppresses that vessel's SAS transactionally. Update checks validity and overrides; FixedUpdate alone steps guidance using universal time and the physics timestep. Both process defensive session snapshots and isolate exceptions. All operations remain on KSP's main thread. Direct-to resets guidance without reacquiring control. Stop releases yaw/horizontal ownership before SAS restoration, records a per-vessel reason and removes only that entry. All-session cleanup continues through exceptions and is repeatable.
+
+Vessel switching is not a stop condition. Packing, unloading, landing, destruction, scene exit, identity/reference/topology/body changes, MechJeb controller replacement/disable, SAS activation, horizontal takeover and competing autopilots stop the affected session. A changed parts list is treated conservatively as docking/splitting; NAV is never transferred automatically. Stops/telemetry include vessel GUIDs, with vessel names in stop and telemetry records. No physics distances, packing rules, native yaw/pitch/throttle controllers or guidance gains were changed.
+
+### Installed MechJeb compatibility inspection
+
+The supplied installed MechJeb2.dll SHA-256 is `1691fa9cdc18d6f73efe954d19f2dc7bb57e23becb5e30ea66677104d87f9bc6`. Binary IL inspection found:
+
+- CheckControlledVessel registers/removes OnFlyByWire on the associated vessel.
+- OnFlyByWire checks deactivation, vessel binding and master core, then calls Drive; it has no active-vessel gate.
+- Core Drive updates that vessel's VesselState and invokes enabled modules' Drive methods. Aircraft Autopilot Drive has no active-vessel gate.
+- FixedUpdate continues for a nonfocused master. Focus checks govern settings reload: ClearModulesCache and OnLoad run on gaining focus. The local dev source has the same broad per-vessel design but differs from the installed binary.
+
+This establishes an inactive-vessel control path by binary inspection, not proof of physical flight. Settings reloads can change modes or controller references; the navigator detects these and stops safely rather than rebinding. Whether the supplied installation retains all NAV settings through repeated focus changes remains an in-game acceptance test. No inactive-vessel bypass patch was added. Harmony's existing verified IL hashes and gate checks are unchanged; unsupported profiles retain passive yaw fallback.
+
+### Kramax conflict attribution
+
+The supplied Kramax George class has a public Vessel vessel field, assigned by SwitchVessels and used by its control callbacks. For that API, a pilot bound to a different vessel does not conflict. Missing/unknown attribution or mode fields retain conservative global rejection. A pilot with unknown/null vessel and any active mode remains a conflict. Kramax switching can move its pilot onto a NAV aircraft; subsequent checks stop that aircraft's NAV. Kramax's algorithms are untouched.
+
+### Validation boundaries
+
+Baseline: 4,615 assertions. Current: 4,657 core/session assertions, 256 yaw/profile assertions, and real KSP ConfigNode round-trip checks. Tests use the production NavSession and registry with minimal vessels/controllers; they cover independent demands/limits/SAS/yaw, switching lookup, route snapshots, completion, direct-to, failures, cleanup exceptions, identity/topology/controller changes and no automatic resumption. They do not execute Unity physics or the native Harmony detour.
+
+All flight acceptance cases are **NOT TESTED**. See [MULTI_VESSEL_TEST_PLAN.md](MULTI_VESSEL_TEST_PLAN.md). The local distribution ZIP is a build-validation artifact only; no release, tag or publication is authorized.

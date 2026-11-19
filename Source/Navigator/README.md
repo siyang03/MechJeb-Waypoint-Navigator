@@ -54,3 +54,11 @@ See [docs/GUIDANCE.md](docs/GUIDANCE.md) for the source mapping and **THIRD_PART
 | `examples/`, `third_party/` | Example plan and attributed Kramax reference code |
 
 Your supplied `KSP_osx`, `Kramax`, `MechJeb`, and suggestions folders remain development/reference material. They are not release packages.
+
+## Multi-aircraft NAV (v1.2.0, local review)
+
+Each aircraft remembers its CFG, plan and starting waypoint. Engage NAV on A, switch to B, select B's route and engage NAV again. Switching changes the window's controls and readouts; NAV off and waypoint buttons affect only the active aircraft. The compact count shows all running NAV sessions. Each aircraft requires its own enabled MechJeb Aircraft Autopilot and independent altitude/speed setup.
+
+All aircraft must remain loaded and unpacked inside KSP's active physics simulation. NAV automatically disengages on packing/unloading and requires manual reengagement after returning. Physics distance varies with KSP configuration and circumstances. Scene exit cleans up every session; scene reload starts with NAV off. There is no on-rails navigation, collision avoidance or automatic formation keeping.
+
+Automated checks and compilation do not establish simultaneous physical flight. Multi-aircraft flight is **NOT TESTED in KSP**. Use the [manual flight checklist](docs/MULTI_VESSEL_TEST_PLAN.md) in a disposable installation/save.

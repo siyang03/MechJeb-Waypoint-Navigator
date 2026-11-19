@@ -2,7 +2,20 @@ using System;
 using System.Collections.Generic;
 using WaypointNavigator;
 using P=WaypointNavigator.KramaxPort;
-public class Vessel {public List<Part> parts=new List<Part>();}
+public class Vessel {
+ public Guid id=Guid.NewGuid();public string vesselName="Fake";
+ public bool loaded=true,packed,LandedOrSplashed;public double latitude,longitude,srfSpeed=285;
+ public CelestialBody mainBody=new CelestialBody();public Groups ActionGroups=new Groups();
+ public List<Part> parts=new List<Part>();
+}
+public enum KSPActionGroup {SAS}
+public class Groups {public bool ThrowOnRestore;bool sas=true;public bool this[KSPActionGroup key]{get{return sas;}}public void SetGroup(KSPActionGroup key,bool value){sas=value;if(value&&ThrowOnRestore)throw new Exception("SAS restore failure");}}
+public class CelestialBody {public string bodyName="Kerbin";public double Radius=600000;}
+public static class FlightGlobals {public static Vessel ActiveVessel;public static List<Vessel> Vessels=new List<Vessel>();}
+public static class HighLogic {public static bool LoadedSceneIsFlight=true;}
+public static class Planetarium {public static double Time;public static double GetUniversalTime(){return Time;}}
+public static class TimeWarp {public static double fixedDeltaTime=.02;}
+namespace UnityEngine {public static class Time {public static float realtimeSinceStartup;}public static class Debug {public static void Log(object text){}public static void LogWarning(object text){}}}
 public class Part {public List<PartModule> Modules=new List<PartModule>();}
 public class PartModule {}
 namespace MuMech {
@@ -131,6 +144,7 @@ class Tests {
   adapter.Release(false);ap.SkipRollInitialization=false;HarmonyYawPatch.Failure=null;
   ap.Enabled=false;threw=false;try{adapter.Acquire();}catch(InvalidOperationException){threw=true;}Check(threw,"Disabled autopilot rejected");
   SasSessionTests.Run(Check);
+  MultiVesselTests.Run(Check);
   Console.WriteLine(checks+" assertions passed, including differential tests against upstream geometry, Course PID and sequencing. No flight test.");
  }
 }
