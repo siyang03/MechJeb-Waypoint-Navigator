@@ -13,7 +13,8 @@ namespace MuMech {
   public bool Enabled=true,HeadingHoldEnabled,RollHoldEnabled;public double HeadingTarget=123,RollTarget=7,BankAngle=25;
   public FakeEditable RollLimit=new FakeEditable {Val=45};
   public double AltitudeTarget=10050,SpeedTarget=285;
-  public void EnableHeadingHold(){HeadingHoldEnabled=RollHoldEnabled=true;}
+  public bool SkipRollInitialization;
+  public void EnableHeadingHold(){HeadingHoldEnabled=true;RollHoldEnabled=!SkipRollInitialization;}
  }
 }
 class Tests {
@@ -91,6 +92,36 @@ class Tests {
   Equal(ap.AltitudeTarget,10050,"Altitude untouched");Equal(ap.SpeedTarget,285,"Speed untouched");
   ap.BankAngle=60;ap.RollLimit.Val=75;adapter.Acquire();Equal(adapter.WriteBank(80),60,"Adapter follows MechJeb bank angle above 30");
   ap.RollLimit.Val=45;Equal(adapter.WriteBank(-80),-45,"Live MechJeb roll limit remains authoritative");adapter.Release();
+  ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;
+  HarmonyYawPatch.Failure=new UnsupportedYawBridgeException("unsupported profile");
+  adapter.Acquire();Check(!adapter.YawBridgeActive,"Unsupported profile selects passive yaw");
+  Check(!ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Fallback retains native roll hold");
+  Check(!MechJebYawBridge.YawEnabled(ap),"Fallback has no yaw owner");
+  Equal(adapter.WriteBank(-18),-18,"Fallback writes bank demand");Equal(ap.RollTarget,-18,"Fallback native setpoint");
+  adapter.Release(false);Check(!ap.HeadingHoldEnabled&&!ap.RollHoldEnabled,"SAS release does not restore previous heading hold");
+  Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Fallback release clears yaw state");
+  HarmonyYawPatch.Failure=null;
+  adapter.Acquire();Check(adapter.YawBridgeActive,"Successful attachment reports active bridge");
+  adapter.Release(false);Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"SAS release detaches active bridge");
+  Check(!ap.HeadingHoldEnabled&&!ap.RollHoldEnabled,"SAS release disables owned horizontal holds");
+  ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;
+  HarmonyYawPatch.Failure=new ApplicationException("unrelated installation failure");
+  threw=false;try{adapter.Acquire();}catch(ApplicationException){threw=true;}
+  Check(threw,"Unexpected installer failure propagates");Check(!adapter.YawBridgeActive,"Failed acquisition has no active bridge");
+  Check(ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Failed acquisition restores previous heading mode");
+  ap.HeadingHoldEnabled=false;Check(!MechJebYawBridge.YawEnabled(ap),"Failed acquisition leaves no yaw ownership");
+  HarmonyYawPatch.Failure=null;
+  ap.RollTarget=9;adapter.Acquire();adapter.Release();Equal(ap.RollTarget,9,"Normal release restores prior roll target");Check(ap.RollHoldEnabled,"Normal release restores prior roll hold");
+  Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Normal release clears yaw ownership");
+  adapter.Acquire();ap.RollTarget=17;adapter.Release(false);Equal(ap.RollTarget,17,"SAS release preserves external roll target");Check(ap.RollHoldEnabled,"SAS release preserves external controller state");
+  adapter.Release(false);Check(!adapter.YawBridgeActive,"Repeated release is harmless");
+  Equal(ap.AltitudeTarget,10050,"Failure and release preserve altitude");Equal(ap.SpeedTarget,285,"Failure and release preserve speed");
+  ap.SkipRollInitialization=true;
+  HarmonyYawPatch.Failure=new UnsupportedYawBridgeException("unsupported profile");
+  threw=false;try{adapter.Acquire();}catch(InvalidOperationException){threw=true;}
+  Check(threw,"Unavailable native roll control rejects acquisition even with unsupported yaw profile");
+  Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Partial acquisition leaves no yaw ownership");
+  adapter.Release(false);ap.SkipRollInitialization=false;HarmonyYawPatch.Failure=null;
   ap.Enabled=false;threw=false;try{adapter.Acquire();}catch(InvalidOperationException){threw=true;}Check(threw,"Disabled autopilot rejected");
   Console.WriteLine(checks+" assertions passed, including differential tests against upstream geometry, Course PID and sequencing. No flight test.");
  }

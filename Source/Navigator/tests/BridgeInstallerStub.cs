@@ -1,6 +1,8 @@
 using System;
 namespace WaypointNavigator {
- // Ownership tests inject a successful installer. Real transpiler/profile tests
- // run separately against the actual Harmony library; this is never shipped.
- public static class HarmonyYawPatch {public static void Install(Type controller) {}}
+ // Test-only installer; never compiled into the distributed plugin.
+ public static class HarmonyYawPatch {
+  public static Exception Failure;
+  public static void Install(Type controller) {if(Failure!=null)throw Failure;}
+ }
 }

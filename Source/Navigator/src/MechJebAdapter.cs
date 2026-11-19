@@ -21,13 +21,17 @@ namespace WaypointNavigator {
   }}
   public double CurrentHeading {get{return (double)Get(Get(core,"VesselState"),"currentHeading");}}
   public double ActualBank {get{return -(double)Get(Get(core,"VesselState"),"currentRoll");}}
+  public bool YawBridgeActive { get; private set; }
   public void Acquire() {
+   if(acquired)throw new InvalidOperationException("NAV already owns roll control");
    CheckConflict();if(!(bool)Get(controller,"Enabled"))throw new InvalidOperationException("Enable MechJeb Aircraft Autopilot first");
    double limit=EffectiveBankLimit;priorHeading=(bool)Get(controller,"HeadingHoldEnabled");priorRoll=(bool)Get(controller,"RollHoldEnabled");priorRollTarget=(double)Get(controller,"RollTarget");acquired=true;
    try {
     // Public API initializes MechJeb's horizontal PIDs; then choose its native roll mode.
     Call(controller,"EnableHeadingHold");Set(controller,"HeadingHoldEnabled",false);Set(controller,"RollTarget",0.0);lastRollTarget=0;
-    MechJebYawBridge.Attach(controller,OwnsRoll);
+    if(!OwnsRoll())throw new InvalidOperationException("MechJeb native roll control unavailable");
+    try {MechJebYawBridge.Attach(controller,OwnsRoll);YawBridgeActive=true;}
+    catch(UnsupportedYawBridgeException) {MechJebYawBridge.Detach(controller);YawBridgeActive=false;}
    }catch{Release();throw;}
   }
   bool OwnsRoll(){CheckConflict();return acquired&&(bool)Get(core,"running")&&(bool)Get(controller,"Enabled")&&!(bool)Get(controller,"HeadingHoldEnabled")&&(bool)Get(controller,"RollHoldEnabled")&&Math.Abs((double)Get(controller,"RollTarget")-lastRollTarget)<0.001;}
@@ -38,9 +42,10 @@ namespace WaypointNavigator {
    demand=Sphere.Clamp(demand,-EffectiveBankLimit,EffectiveBankLimit);Set(controller,"RollTarget",demand);lastRollTarget=demand;return demand;
   }
   public string Diagnostic(){return "actualBank="+ActualBank.ToString("F1")+" commandedBank="+lastRollTarget.ToString("F1")+" rollTarget="+Get(controller,"RealRollTarget")+" rollError="+Get(controller,"RollErr")+" rollOutput="+Get(controller,"RollAct")+" sideslip="+Get(controller,"CurrYaw")+" yawTarget="+Get(controller,"RealYawTarget")+" yawOutput="+Get(controller,"YawAct");}
-  public void Release(){MechJebYawBridge.Detach(controller);if(!acquired)return;acquired=false;
+  public void Release(bool restoreHorizontalControl = true){MechJebYawBridge.Detach(controller);YawBridgeActive=false;if(!acquired)return;acquired=false;
    bool owned=!(bool)Get(controller,"HeadingHoldEnabled")&&(bool)Get(controller,"RollHoldEnabled")&&Math.Abs((double)Get(controller,"RollTarget")-lastRollTarget)<0.001;
    if(!owned)return;
+   if(!restoreHorizontalControl){Set(controller,"HeadingHoldEnabled",false);Set(controller,"RollHoldEnabled",false);return;}
    Set(controller,"RollTarget",priorRollTarget);
    if(priorHeading){Set(controller,"HeadingTarget",CurrentHeading);Call(controller,"EnableHeadingHold");}
    else Set(controller,"RollHoldEnabled",priorRoll);

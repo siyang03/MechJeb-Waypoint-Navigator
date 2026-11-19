@@ -11,7 +11,7 @@ REF_VERSION="$(ls "$REF_ROOT" | sort -V | tail -1)"
 refs=(); for file in "$REF_ROOT/$REF_VERSION/ref/"*/*.dll; do refs+=("-r:$file"); done
 mkdir -p build/tests
 python3 tools/prepare-kramax-reference.py
-"$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" -out:build/tests/Tests.dll src/Navigation.cs src/KramaxGeometry.cs src/KramaxVelocityPid.cs src/MechJebAdapter.cs src/MechJebYawBridge.cs tests/BridgeInstallerStub.cs tests/Program.cs build/tests/UpstreamOracle.cs
+"$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" -out:build/tests/Tests.dll src/Navigation.cs src/KramaxGeometry.cs src/KramaxVelocityPid.cs src/MechJebAdapter.cs src/MechJebYawBridge.cs src/UnsupportedYawBridgeException.cs tests/BridgeInstallerStub.cs tests/Program.cs build/tests/UpstreamOracle.cs
 cat > build/tests/Tests.runtimeconfig.json <<'JSON'
 {"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.NETCore.App","version":"8.0.0"},"rollForward":"LatestMajor"}}
 JSON
@@ -24,7 +24,7 @@ if [[ $# -gt 0 ]]; then
  cp "$MANAGED/Assembly-CSharp.dll" "$MANAGED/UnityEngine.CoreModule.dll" build/tests/
  "$DOTNET" build/tests/ConfigTests.dll "${2:-examples/FlightPlans.cfg}"
  HARMONY_DLL="$1/GameData/000_Harmony/0Harmony.dll"
- "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" "-r:$HARMONY_DLL" -out:build/tests/YawPatchTests.dll src/MechJebYawBridge.cs src/HarmonyYawPatch.cs tests/YawPatchTests.cs
+ "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe "${refs[@]}" "-r:$HARMONY_DLL" -out:build/tests/YawPatchTests.dll src/MechJebYawBridge.cs src/UnsupportedYawBridgeException.cs src/HarmonyYawPatch.cs tests/YawPatchTests.cs
  cp "$HARMONY_DLL" build/tests/
  cp build/tests/Tests.runtimeconfig.json build/tests/YawPatchTests.runtimeconfig.json
  "$DOTNET" build/tests/YawPatchTests.dll "$1/GameData/MechJeb2/Plugins/MechJeb2.dll"

@@ -14,7 +14,7 @@ namespace WaypointNavigator {
    var drive=controller.GetMethod("Drive");
    var yaw=controller.GetMethod("ComputeYaw",BindingFlags.Instance|BindingFlags.NonPublic);
    if(drive==null||yaw==null||Hash(drive)!="839f6972d878ad4cd3572a1fc55ec5a1240eca2a445ea5e624bf345d4a374a52"||Hash(yaw)!="fc1be824ab4ecc296a91016b01cbf24adb5ccaa61bfbb75a5adadfaeed819917")
-    throw new InvalidOperationException("Unverified MechJeb aircraft controller: yaw bridge not applied");
+    throw new UnsupportedYawBridgeException("Unverified MechJeb aircraft controller: yaw bridge not applied");
    var harmony=new Harmony(Id);
    try {
     harmony.Patch(drive,transpiler:new HarmonyMethod(typeof(HarmonyYawPatch).GetMethod("Transpile")) {priority=Priority.Last});

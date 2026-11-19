@@ -30,7 +30,7 @@ class YawTests {
   Check(result[5].opcode==OpCodes.Call&&Equals(result[5].operand,typeof(MechJebYawBridge).GetMethod("YawEnabled")),"Yaw gate calls bridge");
   Check(result[5].labels.Count==1&&result[5].labels[0].Equals(label),"Branch labels preserved");
   bool refused=false;try{HarmonyYawPatch.Transpile(new[]{new CodeInstruction(OpCodes.Nop)}).ToList();}catch(InvalidOperationException){refused=true;}Check(refused,"Unknown instruction layout rejected");
-  refused=false;try{HarmonyYawPatch.Install(typeof(MuMech.MechJebModuleAirplaneAutopilot));}catch(InvalidOperationException){refused=true;}Check(refused,"Unverified controller rejected before patching");
+  refused=false;try{HarmonyYawPatch.Install(typeof(MuMech.MechJebModuleAirplaneAutopilot));}catch(UnsupportedYawBridgeException){refused=true;}Check(refused,"Unverified controller rejected before patching");
   var ap=new MuMech.MechJebModuleAirplaneAutopilot();Check(!MechJebYawBridge.YawEnabled(ap),"Unowned roll mode unchanged");ap.HeadingHoldEnabled=true;Check(MechJebYawBridge.YawEnabled(ap),"Normal heading mode unchanged");
   // Verify the real installed code's profile and the two gates without executing
   // KSP or applying a native detour in desktop .NET.

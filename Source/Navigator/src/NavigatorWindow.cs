@@ -65,22 +65,32 @@ namespace WaypointNavigator {
     adapter=MechJebAdapter.Find(vessel);nav.BankLimit=adapter.EffectiveBankLimit;
     nav.Start(selected,Position(),vessel.mainBody.Radius,selectedWaypoint,Planetarium.GetUniversalTime());
     commandedBank=0;
-    adapter.Acquire(); engaged=true; status="NAV engaged";
+    adapter.Acquire();
+    vessel.ActionGroups.SetGroup(KSPActionGroup.SAS,false);
+    if(vessel.ActionGroups[KSPActionGroup.SAS])throw new InvalidOperationException("Cannot disable SAS; NAV not engaged");
+    engaged=true; status=adapter.YawBridgeActive?"NAV engaged — MechJeb roll + yaw (SAS off)":"NAV engaged — Passive yaw fallback (SAS off)";
    } catch(Exception e) { StopNav(e.GetBaseException().Message); }
   }
   void StopNav(string reason) {
    engaged=false;
-   try { if(adapter!=null) adapter.Release(); } catch(Exception e) { Debug.LogWarning("Waypoint Navigator release: "+e.Message); }
+   try { if(adapter!=null) {
+    // If SAS cannot be read, conservatively avoid restoring competing holds.
+    bool restore=false;
+    try {restore=vessel!=null&&!vessel.ActionGroups[KSPActionGroup.SAS];}
+    finally {adapter.Release(restore);}
+   } } catch(Exception e) { Debug.LogWarning("Waypoint Navigator release: "+e.Message); }
    adapter=null; status=reason;
   }
   void Update() {
    if(Input.GetKeyDown(KeyCode.F8)) show=!show;
    if(engaged && (FlightGlobals.ActiveVessel!=vessel || vessel==null || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight || selected.Planet!=vessel.mainBody.bodyName)) StopNav("Vessel or flight state changed");
+   if(engaged && vessel.ActionGroups[KSPActionGroup.SAS]) StopNav("NAV disengaged: SAS enabled");
   }
   void FixedUpdate() {
    if(!engaged) return;
    try {
     if(vessel==null || FlightGlobals.ActiveVessel!=vessel || vessel.packed || vessel.LandedOrSplashed || !HighLogic.LoadedSceneIsFlight) { StopNav("Vessel or flight state changed"); return; }
+    if(vessel.ActionGroups[KSPActionGroup.SAS]) { StopNav("NAV disengaged: SAS enabled"); return; }
     if(Conflict(vessel)) throw new InvalidOperationException("Kramax activated; NAV released");
     nav.BankLimit=adapter.EffectiveBankLimit;
     nav.Step(Position(),vessel.srfSpeed,Planetarium.GetUniversalTime(),TimeWarp.fixedDeltaTime);

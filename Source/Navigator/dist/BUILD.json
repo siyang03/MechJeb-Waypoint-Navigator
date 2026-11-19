@@ -1,0 +1,16 @@
+{
+  "built_at_utc": "2026-11-19T11:33:45+00:00",
+  "dll": "GameData/MechJebWaypointNavigator/Plugins/MechJebWaypointNavigator.dll",
+  "sha256": "f14bb3543bfb4f329b4d9420cca5355723c447c5202b7f3bbfdeb10e32298d77",
+  "source_sha256": {
+    "src/FlightPlans.cs": "ff58c03b5d3fae87d4ff56eb3e2b2652d4bdeb12ede320757dbd78aa59f3bbac",
+    "src/HarmonyYawPatch.cs": "ef884a6d09b8b22475b2c96653941adb8adf78cea47eb95d44f93d6cf6c2bc6b",
+    "src/KramaxGeometry.cs": "b8d74688df4a0f75c100fa0e8b911025b48293e43fc6a53959c06617e3c7e0a6",
+    "src/KramaxVelocityPid.cs": "3128512ddfd7a11ff01754dacc3131e6d6e2bcdc100609d1dee27147b5fd24cb",
+    "src/MechJebAdapter.cs": "93ce2b77113b6a668207db97896de6a7b7b70f9a2fed16cc3125984c381c22bb",
+    "src/MechJebYawBridge.cs": "047828562ef31decfc7fb2cfb3d82196f067f5cf06ae36257afe763fe3bca7ff",
+    "src/Navigation.cs": "abfced1b2cd566a014bf2db70fae5b7712c51f1bfcf711004881dc61eec25308",
+    "src/NavigatorWindow.cs": "7d27386aee49f0aab36354a306a43ab27501f4728ba9959f831510b25d7f7dee",
+    "src/UnsupportedYawBridgeException.cs": "da93735d715631843cb20e1ab1d15ccdf955a0be43b56cae011cc63db6385a9b"
+  }
+}
