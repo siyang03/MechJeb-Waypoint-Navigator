@@ -11,7 +11,7 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 **1. Download:**
 
-- [**Download MechJeb-Waypoint-Navigator (ZIP)**](https://github.com/siyang03/Kerbin-Waypoint-Toolkit/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
+- [**Download MechJeb-Waypoint-Navigator (ZIP)**](https://github.com/siyang03/MechJeb-Waypoint-Navigator/releases/latest/download/MechJeb-Waypoint-Navigator.zip)
 
 **2. Install Waypoint Navigator**
 
