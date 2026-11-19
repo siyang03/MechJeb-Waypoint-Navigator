@@ -5,7 +5,7 @@
 - **Flight Plan Editor** — An interactive, offline map for creating routes and previewing turns.
 - **Waypoint Navigator** — Follows your route using MechJeb Aircraft Autopilot.
 
-Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Uses [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/), and [Kerbin map from smooney.space](https://smooney.space/mapdownloads/).
+Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Uses [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/) and the [Kerbin map by Smooney](https://smooney.space/mapdownloads/).
 
 ## Download & Install
 
