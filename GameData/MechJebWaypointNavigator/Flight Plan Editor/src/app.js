@@ -185,6 +185,6 @@ bundledMap.onload=()=>{
   $('mapEmpty').hidden=true;fit();render();
   message('Kerbin map loaded. Click to add waypoints or open a CFG file.');
 };
-bundledMap.onerror=()=>{ $('mapEmpty').querySelector('strong').textContent='Kerbin map unavailable';message('Could not load KerbinMap4MB.jpg. Restore assets/KerbinMap4MB.jpg, then reload the editor.',true); };
-bundledMap.src='assets/KerbinMap4MB.jpg';
+bundledMap.onerror=()=>{ $('mapEmpty').querySelector('strong').textContent='Kerbin map unavailable';message('Could not load KerbinMap.png. Restore assets/KerbinMap.png, then reload the editor.',true); };
+bundledMap.src='assets/KerbinMap.png';
 

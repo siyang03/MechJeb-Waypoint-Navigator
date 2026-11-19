@@ -8,6 +8,7 @@ See THIRD_PARTY_NOTICES.md and licenses/Kramax-LICENSE.txt for upstream credits
 and terms. Original independent navigator code retains the notice in
 licenses/Original-code-MIT.txt. This does not relicense Kramax code under MIT.
 
-Other editor files and the supplied map retain their existing rights/terms;
-this bundle does not assert a new license for them. No KSP, MechJeb or Harmony
+Other editor files retain their existing rights/terms. The map is adapted
+from the MIT-licensed Micro Map project (licenses/Micro-Map-MIT.txt); no
+ownership of underlying game assets is claimed. No KSP, MechJeb or Harmony
 binary is redistributed. RCTestFlight is credited as inspiration only.
