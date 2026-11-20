@@ -24,7 +24,7 @@ Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Us
 
 **2. Install**
 
-Requires **KSP 1**, [MechJeb2](https://github.com/MuMech/MechJeb2), and **KSP Harmony 2** (`000_Harmony`, available on CKAN).
+Requires **KSP 1**, [MechJeb2](https://github.com/MuMech/MechJeb2), and [Harmony 2](https://github.com/KSPModdingLibs/HarmonyKSP) (available on CKAN).
 
 Extract the ZIP and copy `MechJebWaypointNavigator` into your KSP `GameData` folder. On updates, preserve your existing CFG flight plans.
 
