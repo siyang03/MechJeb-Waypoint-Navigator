@@ -100,8 +100,8 @@ For close formation flight, **using the same route works better than separate pa
 
 - **Physics range:** Both aircraft must remain loaded and unpacked. [Physics Range Extender (PRE)](https://github.com/jrodrigv/PhysicsRangeExtender) may help extend the range.
 - **No automatic formation keeping:** NAV does not synchronize speeds, maintain spacing, or prevent collisions.
-- **NAV disengagement:** Packed or unloaded aircraft lose NAV. Leaving the flight scene disengages all NAV sessions. Reengage manually when necessary.
-- **Independent autopilots:** Each aircraft needs its own MechJeb Aircraft Autopilot configured.
+- **NAV disengagement:** NAV automatically disengages when an aircraft leaves physics range. Reengage manually when it returns.
+- **Independent autopilots:** Each aircraft needs its own MechJeb Aircraft Autopilot configured pre flight.
 
 **Tested:** Simultaneous two-aircraft navigation and close formation flying, including manual speed adjustments. Larger formations have not yet been flight-tested.
 
