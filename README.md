@@ -105,7 +105,7 @@ For close formation flight, **using the same route works better than separate pa
 
 **Tested:** Simultaneous two-aircraft navigation and close formation flying, including manual speed adjustments. Larger formations have not yet been flight-tested.
 
-[Watch the multi-aircraft demonstration (6:27)](https://youtu.be/7WIXcDXlVmw) | [Full flight timelapse (11 min)](https://youtu.be/j17pTe91xRg)
+[Watch the multi-aircraft demonstration (6:27)](https://youtu.be/7WIXcDXlVmw) | [Full flight timelapse (11:20)](https://youtu.be/j17pTe91xRg)
 
 ## Development & Credits
 
@@ -120,9 +120,9 @@ MechJeb Waypoint Navigator is an independent add-on for MechJeb2 and is not affi
 
 ## Appendix: Full Flight Recording
 
-[**Watch the full flight timelapse on YouTube (11 min, 3× speed)**](https://youtu.be/j17pTe91xRg)
+[**Watch the full flight timelapse on YouTube (11:20, 3× speed)**](https://youtu.be/j17pTe91xRg)
 
-An accelerated recording of the original 34-minute test flight, preserved for reference. The [shorter demonstration](https://youtu.be/7WIXcDXlVmw) highlights the key moments.
+An accelerated recording of the original 34-minute formation test flight, preserved for reference. The [shorter demonstration](https://youtu.be/7WIXcDXlVmw) highlights the key moments.
 
 ---
 
