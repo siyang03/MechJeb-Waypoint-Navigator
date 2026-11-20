@@ -43,6 +43,7 @@ Save your flight plan as a `.cfg` file directly in `GameData/MechJebWaypointNavi
 **⚠️ Browser compatibility:** Only **Chrome and Edge** are supported. Firefox and Safari are not supported.
 
 ![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight_Plan_Editor_Screenshot.png)
+<!-- ![Flight Plan Editor showing a Kerbin route and estimated turns](https://raw.githubusercontent.com/siyang03/MechJeb-Waypoint-Navigator/main/Screenshots/Flight_Plan_Editor_Screenshot.png) -->
 
 **2. Set up MechJeb**
 
@@ -59,6 +60,7 @@ Open **Waypoint Navigator → Plans**, refresh the CFG files, and select your fl
 Press **NAV on**. Your aircraft will follow the waypoints automatically!
 
 ![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](Screenshots/MechJebWaypointNavigator_Screenshot.png)
+<!-- ![Waypoint Navigator and MechJeb Aircraft Autopilot in flight](https://raw.githubusercontent.com/siyang03/MechJeb-Waypoint-Navigator/main/Screenshots/MechJebWaypointNavigator_Screenshot.png) -->
 
 ## Good to Know
 
@@ -70,30 +72,40 @@ Press **NAV on**. Your aircraft will follow the waypoints automatically!
 - **Turn predictions:** The editor estimates turn paths using the selected speed and bank angle. These are estimates, not guarantees; high-speed sharp turns may overshoot.
 - **F8** hides or shows the Navigator window.
 
-## Multi-aircraft Navigation (v1.2.0)
 
-Starting with v1.2.0, multiple aircraft can independently follow their own flight plans at the same time.
+## Multi-Aircraft Navigation & Formation Flight (v1.2.0)
 
-**How to use:**
+**Fly multiple aircraft simultaneously, each following its own flight plan!**
 
-1. Enable MechJeb Aircraft Autopilot on aircraft A, select its route, and engage NAV.
-2. Switch to aircraft B while A remains within physics range.
-3. Enable MechJeb Aircraft Autopilot on B, select its route, and engage NAV.
-4. Both aircraft will continue following their respective routes. You can switch between them to monitor or adjust their navigation.
+![Two aircraft flying in formation](Screenshots/Formation_Flight_Screenshot.png)
+<!-- ![Two aircraft flying in formation](https://raw.githubusercontent.com/siyang03/MechJeb-Waypoint-Navigator/main/Screenshots/Formation_Flight_Screenshot.png) -->
 
-Each aircraft remembers its selected CFG, flight plan, waypoint progress, and navigation state. The Navigator window always controls the currently active aircraft. **NAV off** and waypoint selections affect only that aircraft. The window also displays the total number of active NAV sessions.
+### Quick Start
 
-**Important limitations:**
+1. **Aircraft A:** Enable MechJeb Aircraft Autopilot, load a flight plan, and engage NAV.
+2. **Aircraft B:** Switch to B (keeping A within physics range), configure MechJeb, and engage NAV with its own flight plan.
+3. **That's it!** Both aircraft navigate independently. Switch between them to monitor or adjust their routes.
 
-- Aircraft must remain **loaded and unpacked** within KSP's active physics range. The applicable distance depends on game settings and circumstances.
-- If an aircraft becomes packed or unloaded, its NAV automatically disengages. It must be reengaged manually when the aircraft becomes available again.
-- Each aircraft requires its own enabled MechJeb Aircraft Autopilot, with altitude and speed configured independently.
-- Leaving the flight scene disengages all NAV sessions. Navigation does not automatically resume after reloading.
-- The mod does not simulate background flight, coordinate aircraft speeds, maintain formations, or avoid collisions.
+Each aircraft remembers its own flight plan, waypoint progress, and NAV state. The Navigator window controls only the currently selected aircraft.
 
-**Testing:** Simultaneous two-aircraft navigation has been successfully tested in KSP, including flying two aircraft on the same route and bringing them into close proximity through manual speed adjustments. Larger formations and the full set of failure/recovery scenarios have not yet been flight-tested.
+### Formation Flying Tips
 
-See the [multi-aircraft test checklist](Source/Navigator/docs/MULTI_VESSEL_TEST_PLAN.md) for additional validation scenarios.
+For close formation flight, **using the same route works better than separate parallel routes.**
+
+1. Load the **same flight plan** on both aircraft.
+2. Increase the trailing aircraft's target speed to close the gap.
+3. Adjust speeds manually to maintain separation.
+
+### Important Limitations
+
+- **Physics range:** Both aircraft must remain loaded and unpacked. [Physics Range Extender (PRE)](https://github.com/jrodrigv/PhysicsRangeExtender) may help extend the range.
+- **No automatic formation keeping:** NAV does not synchronize speeds, maintain spacing, or prevent collisions.
+- **NAV disengagement:** Packed or unloaded aircraft lose NAV. Leaving the flight scene disengages all NAV sessions. Reengage manually when necessary.
+- **Independent autopilots:** Each aircraft needs its own MechJeb Aircraft Autopilot configured.
+
+**Tested:** Simultaneous two-aircraft navigation and close formation flying, including manual speed adjustments. Larger formations have not yet been flight-tested.
+
+[Watch the multi-aircraft demonstration (6:27)](https://youtu.be/7WIXcDXlVmw) | [Full flight timelapse (11 min)](https://youtu.be/j17pTe91xRg)
 
 ## Development & Credits
 
@@ -102,30 +114,9 @@ See the [multi-aircraft test checklist](Source/Navigator/docs/MULTI_VESSEL_TEST_
 Diagnostic records appear in `KSP.log` during NAV.
 
 See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for licensing and acknowledgments.
+<!-- See [LICENSE](https://github.com/siyang03/MechJeb-Waypoint-Navigator/blob/main/LICENSE) and [THIRD_PARTY_NOTICES.md](https://github.com/siyang03/MechJeb-Waypoint-Navigator/blob/main/THIRD_PARTY_NOTICES.md) for licensing and acknowledgments. -->
 
 MechJeb Waypoint Navigator is an independent add-on for MechJeb2 and is not affiliated with or endorsed by the MechJeb development team.
-
-## Appendix: Formation Flight
-
-**Multi-aircraft NAV supports independent flight paths, not automatic formation keeping.** Aircraft speeds and separation must be managed manually.
-
-![Two aircraft flying in formation](Screenshots/Formation_Flight_Screenshot.png)
-
-### Tips from In-game Testing
-
-For two-aircraft formation flying, I found that **using the same flight path works better than separate, roughly parallel paths.**
-
-1. **Same route:** Load the same flight plan on both aircraft and engage NAV.
-2. **Close the gap:** Gradually increase the trailing aircraft's MechJeb target speed until it catches up.
-3. **Maintain separation:** Adjust both aircraft's speeds to keep them close together.
-
-With careful speed adjustments, I even managed to gently bump the leading aircraft's tail with the trailing aircraft's nose!
-
-### Limitations & Tips
-
-- **Physics range:** [Physics Range Extender (PRE)](https://github.com/jrodrigv/PhysicsRangeExtender) can help keep aircraft loaded and controllable at greater distances, though higher ranges may impact performance.
-- **Manual coordination:** NAV does not synchronize speeds, maintain formation spacing, or prevent collisions.
-- **Larger formations:** Three or more aircraft require considerably more manual speed adjustment.
 
 ## Appendix: Full Flight Recording
 
