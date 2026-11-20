@@ -92,9 +92,9 @@ Each aircraft remembers its own flight plan, waypoint progress, and NAV state. T
 
 For close formation flight, **using the same route works better than separate parallel routes.**
 
-1. Load the **same flight plan** on both aircraft.
+1. Load the **same flight plan** on both aircraft for a closer formation.
 2. Increase the trailing aircraft's target speed to close the gap.
-3. Adjust speeds manually to maintain separation.
+3. Once the formation is stable, it should remain close as long as both aircraft maintain the same speed and bank angle limit.
 
 ### Important Limitations
 
