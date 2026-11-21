@@ -41,3 +41,7 @@ header{align-items:flex-start}.cfg-actions{width:min(100%,820px);padding:14px 16
 .cfg-actions .direct-file-status.permission-warning{color:#facc15}
 
 .cfg-actions .direct-file-status.error{color:#ff6b6b}
+
+.route-visibility{display:flex;flex-basis:100%;gap:18px;flex-wrap:wrap}.prediction-toolbar .route-visibility label{margin:0}.prediction-toolbar .route-visibility input{width:auto}.calibration>label{max-width:420px}
+
+.prediction-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}.prediction-controls>label{flex:none}.prediction-toolbar{column-gap:0;row-gap:10px}.prediction-controls input{width:80px}.prediction-toolbar #predictionStatus{flex-basis:100%;margin:0;max-width:650px}

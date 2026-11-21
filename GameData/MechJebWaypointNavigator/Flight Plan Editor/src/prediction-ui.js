@@ -4,8 +4,8 @@ function predictionBusy(busy){$('predictionBusy').hidden=!busy;$('togglePredicti
 function predictionNotice(text='',level='warning'){ $('predictionStatus').textContent=text;$('predictionStatus').hidden=!text;$('predictionStatus').classList.toggle('error',level==='error');}
 function predictionInputs(){
  const points=waypoints().map(w=>({...K.geo(w),flags:Object.fromEntries(w.children.filter(v=>v.type==='value').map(v=>[v.key,v.value]))}));
- const options={speed,altitude:Number($('previewAltitude').value),bankLimit:Number($('previewBank').value)};
- for(const id of ['previewAltitude','previewBank'])if(!$(id).value.trim())throw Error('Enter all preview settings.');
+ const options={speed,altitude:defaultAlt,bankLimit:Number($('previewBank').value)};
+ for(const id of ['previewBank'])if(!$(id).value.trim())throw Error('Enter all preview settings.');
  if(!Number.isFinite(options.bankLimit))throw Error('Enter a valid bank angle.');
  if(options.bankLimit>=90)throw Error('Bank angle must be less than 90°.');
  if(options.bankLimit<0)throw Error('Bank angle cannot be below 0°.');
@@ -42,7 +42,7 @@ function predictionLine(points){
  ctx.stroke();
 }
 function drawPrediction(){
- if(!predictionEnabled||!predictionResult)return;
+ if(!$('showWaypoints').checked||!predictionEnabled||!predictionResult)return;
  ctx.save();ctx.strokeStyle='#ffad66';ctx.lineWidth=2;ctx.setLineDash([6,4]);predictionLine(predictionResult.samples);
  if($('previewCircles').checked&&Number.isFinite(predictionResult.groundRadius)){ctx.strokeStyle='#ffad6670';ctx.lineWidth=1;ctx.setLineDash([3,5]);
   for(const event of predictionResult.switches){if(Math.abs(event.turn)<1)continue;predictionLine(FlightPrediction.circle(event,predictionResult.groundRadius));}
@@ -50,9 +50,9 @@ function drawPrediction(){
  ctx.restore();
 }
 $('togglePrediction').onclick=()=>{
- predictionEnabled=!predictionEnabled;$('togglePrediction').setAttribute('aria-pressed',String(predictionEnabled));$('predictionPanel').hidden=!predictionEnabled;
+ predictionEnabled=!predictionEnabled;$('togglePrediction').setAttribute('aria-pressed',String(predictionEnabled));
  if(predictionEnabled){predictionKey='';schedulePrediction();}else{predictionBusy(false);predictionNotice();predictionGeneration++;if(predictionTimer!==null)clearTimeout(predictionTimer);predictionResult=null;}
  draw();
 };
-for(const id of ['previewAltitude','previewBank'])$(id).onchange=()=>{predictionKey='';schedulePrediction();draw();};
+for(const id of ['previewBank'])$(id).onchange=()=>{predictionKey='';schedulePrediction();draw();};
 $('previewCircles').onchange=draw;
