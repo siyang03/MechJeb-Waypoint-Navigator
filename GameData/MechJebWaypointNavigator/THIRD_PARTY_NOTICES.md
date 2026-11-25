@@ -10,4 +10,6 @@ The original `George.cs` header also credits Thunder Aerospace Corporation’s K
 
 **Map:** The Kerbin map was obtained from [Micro Map by KerbalMissile](https://github.com/KerbalMissile/Micro-Map), specifically `GameData/MicroMap/Textures/map.png`. That repository is published under the MIT License (see `licenses/Micro-Map-MIT.txt`). The original PNG is bundled unchanged for use in the offline editor. The provenance of the underlying terrain imagery has not been independently verified; no ownership of KSP game assets is claimed.
 
+**High-resolution map:** The 8K Kerbin map is derived from the original 16K map by [Smooneychad (Smooney Space)](https://smooney.space/mapdownloads/), downscaled and compressed for the offline editor. Redistribution is explicitly permitted by the author.
+
 **Dependencies:** KSP, MechJeb and KSP Harmony 2 are separate installations and are not bundled. Original independent navigator code retains its MIT notice in `licenses/Original-code-MIT.txt`.
