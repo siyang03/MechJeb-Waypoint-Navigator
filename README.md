@@ -9,9 +9,9 @@
 
 [![MechJeb Waypoint Navigator — Multi-Aircraft Flight Demonstration](https://img.youtube.com/vi/7WIXcDXlVmw/hqdefault.jpg)](https://youtu.be/7WIXcDXlVmw)
 
-> Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Uses [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/) and the [Kerbin map from Micro Map by KerbalMissile](https://github.com/KerbalMissile/Micro-Map) (MIT license).
-> 
-> High-resolution Kerbin map by [Smooneychad (Smooney Space)](https://smooney.space/mapdownloads/), redistributed with permission.
+> Inspired by [RCTestFlight's waypoint missions](https://youtu.be/vYeYZpBE51I). Uses [Kramax directional guidance](https://forum.kerbalspaceprogram.com/topic/150846-112x-kramax-autopilot-continued-course-guidance-and-auto-land-for-spaceplanes/) and the high-resolution Kerbin map by [Smooneychad (Smooney Space)](https://smooney.space/mapdownloads/), redistributed with permission.
+>
+> Fallback map: [Micro Map by KerbalMissile](https://github.com/KerbalMissile/Micro-Map) (MIT license).
 
 ## Download & Install
 
