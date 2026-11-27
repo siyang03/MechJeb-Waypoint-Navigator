@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kerbin • Flight Plan Editor</title><link rel="stylesheet" href="src/style.css"><script defer src="src/core.js"></script><script defer src="src/locations.js"></script><script defer src="src/prediction.js"></script><script defer src="src/app.js"></script><script defer src="src/direct-file.js"></script><script defer src="src/prediction-ui.js"></script><script defer src="src/default-file.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kerbin • Flight Plan Editor</title><link rel="stylesheet" href="src/style.css"><script defer src="src/core.js"></script><script defer src="src/locations.js"></script><script defer src="src/prediction.js"></script><script defer src="src/kerbinside.js"></script><script defer src="src/app.js"></script><script defer src="src/direct-file.js"></script><script defer src="src/prediction-ui.js"></script><script defer src="src/default-file.js"></script></head>
 <body>
 <header><div class="brand"><div><h1>Kerbin <span>Flight Plan Editor</span></h1><p>OFFLINE WORKSPACE</p></div></div>
 <section class="cfg-actions" aria-label="CFG file controls"><p class="cfg-help">Your flight plans will be stored in a CFG file.</p>
@@ -12,12 +12,6 @@
 <div class="hint map-instructions"><span>Click to add</span><span>Drag markers to move</span><span>Wheel to zoom</span><span>Right click or shift-drag to move the map</span></div>
 <div id="mapBox"><canvas id="map" tabindex="0" aria-label="Kerbin map. Click to add waypoints, drag numbered markers to move them. Select a waypoint to edit its coordinates."></canvas><div id="mapEmpty"><strong>Loading the Kerbin map…</strong><span>Optional: add assets/KerbinMapHighResolution.jpeg for the high-resolution map.<br>Otherwise, the bundled assets/KerbinMap.png is used.</span></div><div class="map-caption"><span id="cursor">LAT — / LON —</span><span id="zoomLabel">100%</span></div></div>
 <p class="map-credit">Map source: <a href="https://github.com/KerbalMissile/Micro-Map" target="_blank" rel="noopener noreferrer">Micro Map by KerbalMissile (MIT)</a></p>
-<section id="locationsPanel" class="locations-panel" aria-label="Map locations" hidden>
-<div class="locations-heading"><h2>Map locations</h2><span id="locationsLegend"></span></div>
-<p class="locations-note">Fixed stock/DLC sites · Spoilers · Select a marker or location below. CommNet shows seven extra groundstations; availability depends on game settings. Modded sites and random green monoliths are not included.</p>
-<div id="locationList" class="location-list"></div>
-<div id="locationDetails" class="location-details" hidden><strong id="locationName"></strong><p id="locationCoordinates"></p><p id="locationNote"></p><div class="location-actions"><a id="locationSource" target="_blank" rel="noopener noreferrer">Location source ↗</a><button id="addLocation">Add as waypoint</button></div></div>
-</section>
 <section class="calibration" aria-label="Planning settings"><h2 class="planning-title">Planning settings</h2><div class="settings"><label>Default altitude (m ASL)<input id="defaultAlt" type="number" step="1" value="10000"></label><label>Cruise estimate (m/s)<input id="speed" type="number" min="1" step="1" value="300"></label></div></section>
 <section id="predictionPanel" class="prediction-panel" hidden aria-label="Flight path estimate">
 <h2>Estimated Flight Path</h2><div class="prediction-settings">
@@ -27,6 +21,7 @@
 </div><label class="circle-option"><input id="previewCircles" type="checkbox" checked> Show Turn Radius</label>
 </section>
 <div class="stats"><div><span>ROUTE LENGTH</span><strong id="total">0.0 <small>km</small></strong></div><div><span>ESTIMATED DURATION</span><strong id="duration">0h 00m</strong></div><div><span>WAYPOINTS</span><strong id="count">0</strong></div></div>
+<section class="additional-map-layers" aria-labelledby="additionalLayersHeading"><h2 id="additionalLayersHeading">Additional Map Layers</h2><button id="toggleKerbinSide" aria-pressed="false">Show Kerbin Side Remastered Airfields</button></section>
 </section>
 <aside><section class="plan-panel"><span class="eyebrow">FLIGHT PLANS</span><label class="sr" for="plans">Selected plan</label><select id="plans"></select><div class="buttons"><button id="newPlan">New flight plan</button><button id="duplicate">Duplicate</button><button id="deletePlan" class="danger">Delete</button></div><label>Plan name<input id="planName" maxlength="160"></label><label>Description<textarea id="description" rows="2" maxlength="1000"></textarea></label></section>
 <section class="route-panel"><div class="section-heading"><h2>Waypoints <span id="routeCount">00</span></h2></div><div class="buttons insert-controls"><button id="insertBefore" title="Insert a waypoint before the selected waypoint">Insert before</button><button id="insertAfter" title="Insert a waypoint after the selected waypoint">Insert after</button></div><div class="table-head"><span>ORDER / WAYPOINT</span><span>LEG / TOTAL</span></div><ol id="waypoints"></ol><p id="noPoints" class="empty">Your route starts here.<br>Click the map to add waypoints.</p></section>

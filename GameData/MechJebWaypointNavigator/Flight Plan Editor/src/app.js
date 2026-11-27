@@ -7,7 +7,7 @@ const view={scale:1,x:0,y:0}, canvas=$('map'), ctx=canvas.getContext('2d');
 let width=2048,height=1022,gesture=null;
 const layers={anomaly:false,launch:false,commnet:false};
 const locationStyles={anomaly:{symbol:'◆',color:'#ffd27a',label:'Anomalies'},launch:{symbol:'■',color:'#90d9ff',label:'Launch sites / runways'},commnet:{symbol:'▲',color:'#c6acff',label:'CommNet groundstations'}};
-let selectedLocation=null;
+let showKerbinSide=false;
 K.addPlan(tree,K.plan('Untitled route'));
 const all=()=>K.plans(tree), current=()=>all()[active], waypoints=()=>current()?K.points(current()):[];
 const snapshot=()=>JSON.stringify({tree,active,selected,offset,defaultAlt,speed,cfgFilename});
@@ -94,45 +94,15 @@ function at(p){const x=(p.x-view.x)/view.scale,y=(p.y-view.y)/view.scale;if(x<0|
 function markerScale(){return Math.min(1,view.scale/Math.min(canvas.clientWidth/width,canvas.clientHeight/height));}
 function markerRadius(index){return (index===selected?8:7)*markerScale();}
 function visibleLocations(){return KerbinLocations.filter(site=>layers[site.kind]);}
-function selectLocation(site){selectedLocation=site;renderLocations();draw();}
 function renderLocations(){
-  const sites=visibleLocations();
-  if(selectedLocation&&!sites.includes(selectedLocation))selectedLocation=null;
-  $('locationsPanel').hidden=!sites.length;
   $('toggleAnomalies').setAttribute('aria-pressed',String(layers.anomaly));
-  $('toggleAnomalies').textContent='Anomalies';
   $('toggleLaunches').setAttribute('aria-pressed',String(layers.launch));
-  $('toggleLaunches').textContent='Launch Sites / Runways';
   $('toggleCommNet').setAttribute('aria-pressed',String(layers.commnet));
-  $('toggleCommNet').textContent='CommNet Groundstations';
-  $('locationsLegend').textContent=Object.entries(locationStyles).filter(([kind])=>layers[kind]).map(([kind,style])=>`${kind==='anomaly'?'◆ / ▮':style.symbol} ${style.label} (${KerbinLocations.filter(site=>site.kind===kind).length})`).join(' · ');
-  $('locationList').replaceChildren(...sites.map(site=>{
-    const button=document.createElement('button');button.className=site.kind;
-    button.textContent=(site.shape==='monolith'?'▮':locationStyles[site.kind].symbol)+' '+site.name;
-    button.setAttribute('aria-pressed',String(site===selectedLocation));
-    button.onclick=()=>selectLocation(site);return button;
-  }));
-  $('locationDetails').hidden=!selectedLocation;
-  $('addLocation').disabled=!current();
-  if(selectedLocation){
-    $('locationName').textContent=selectedLocation.name;
-    $('locationCoordinates').textContent=`Latitude ${selectedLocation.lat.toFixed(6)}° · Longitude ${selectedLocation.lon.toFixed(6)}°`;
-    $('locationNote').textContent=selectedLocation.note+` Adding this site uses the planning altitude (${defaultAlt} m ASL), not ground elevation.`;
-    $('locationSource').href=selectedLocation.source;
-  }
-}
-function hitLocation(p){
-  const W=width*view.scale,r=10*markerScale();let nearest=null,best=r;
-  for(const site of visibleLocations()){
-    const q=screen(site),distance=Math.min(...[-W,0,W].map(dx=>Math.hypot(q.x+dx-p.x,q.y-p.y)));
-    if(distance<best){best=distance;nearest=site;}
-  }
-  return nearest;
 }
 function drawLocations(){
   const W=width*view.scale,scale=markerScale();ctx.save();
   for(const site of visibleLocations()){
-    const q=screen(site),r=(site===selectedLocation?7:5)*scale;
+    const q=screen(site),r=5*scale;
     for(const dx of [-W,0,W]){
       const x=q.x+dx,y=q.y;ctx.beginPath();
       if(site.shape==='monolith')ctx.rect(x-r*.5,y-r*1.0125,r,r*2.025);
@@ -141,7 +111,7 @@ function drawLocations(){
       else{ctx.moveTo(x,y-r-1);ctx.lineTo(x+r+1,y);ctx.lineTo(x,y+r+1);ctx.lineTo(x-r-1,y);ctx.closePath();}
       ctx.fillStyle='#0b1117';ctx.fill();ctx.strokeStyle=locationStyles[site.kind].color;ctx.lineWidth=1.5*scale;ctx.stroke();
       const relativeZoom=view.scale/Math.min(canvas.clientWidth/width,canvas.clientHeight/height);
-      if(site===selectedLocation||relativeZoom>=1.6){
+      if(relativeZoom>=1.6){
         ctx.font='11px sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';
         ctx.lineWidth=3;ctx.lineJoin='round';ctx.miterLimit=2;ctx.strokeStyle='#09141d';ctx.strokeText(site.name,x+r+4,y-r);ctx.fillStyle=locationStyles[site.kind].color;ctx.fillText(site.name,x+r+4,y-r);
       }
@@ -152,7 +122,39 @@ function drawLocations(){
 $('toggleAnomalies').onclick=()=>{layers.anomaly=!layers.anomaly;renderLocations();draw();};
 $('toggleLaunches').onclick=()=>{layers.launch=!layers.launch;renderLocations();draw();};
 $('toggleCommNet').onclick=()=>{layers.commnet=!layers.commnet;renderLocations();draw();};
-$('addLocation').onclick=()=>{if(selectedLocation)append(selectedLocation.lat,selectedLocation.lon,selectedLocation.name);};
+function drawKerbinSideAirfields(){
+  if(!showKerbinSide)return;
+  const W=width*view.scale,scale=markerScale(),half=8*scale,color='#69b9ff';
+  const relativeZoom=view.scale/Math.min(canvas.clientWidth/width,canvas.clientHeight/height);
+  ctx.save();
+  for(const site of KerbinSide.airfields){
+    const q=screen(site);
+    for(const dx of [-W,0,W]){
+      const x=q.x+dx,y=q.y;
+      ctx.beginPath();ctx.arc(x,y,3*scale,0,Math.PI*2);
+      ctx.fillStyle='#0b1117';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=1.5*scale;ctx.stroke();
+      for(const axis of site.axes){
+        const e=KerbinSide.runwayDirection(site.lat,axis[0],width,height);
+        ctx.beginPath();ctx.moveTo(x-half*e.x,y-half*e.y);ctx.lineTo(x+half*e.x,y+half*e.y);
+        ctx.strokeStyle='#09141d';ctx.lineWidth=4*scale;ctx.stroke();
+        ctx.strokeStyle=color;ctx.lineWidth=2*scale;ctx.stroke();
+      }
+      if(relativeZoom>=1.6){
+        const text=KerbinSide.label(site);
+        ctx.font='11px sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';
+        ctx.lineWidth=3;ctx.lineJoin='round';ctx.miterLimit=2;
+        ctx.strokeStyle='#09141d';ctx.strokeText(text,x+half+4,y-5*scale);
+        ctx.fillStyle=color;ctx.fillText(text,x+half+4,y-5*scale);
+      }
+    }
+  }
+  ctx.restore();
+}
+$('toggleKerbinSide').onclick=()=>{
+  showKerbinSide=!showKerbinSide;
+  $('toggleKerbinSide').setAttribute('aria-pressed',String(showKerbinSide));
+  draw();
+};
 function draw(){
   const b=size(),s=view.scale,W=width*s,H=height*s;ctx.clearRect(0,0,b.width,b.height);ctx.fillStyle='#09141d';ctx.fillRect(0,0,b.width,b.height);
   ctx.save();ctx.beginPath();ctx.rect(view.x,view.y,W,H);ctx.clip();ctx.fillStyle='#102936';ctx.fillRect(view.x,view.y,W,H);if(image)ctx.drawImage(image,view.x,view.y,W,H);
@@ -160,6 +162,7 @@ function draw(){
   for(let lat=-90;lat<=90;lat+=30){const y=view.y+(90-lat)/180*H;ctx.beginPath();ctx.moveTo(view.x,y);ctx.lineTo(view.x+W,y);ctx.stroke();}
   for(let lon=-180;lon<180;lon+=30){const x=screen({lat:0,lon}).x;ctx.beginPath();ctx.moveTo(x,view.y);ctx.lineTo(x,view.y+H);ctx.stroke();ctx.fillStyle='#bdd3dc';ctx.font='10px monospace';ctx.fillText(`${lon}°`,x+4,view.y+H-8);}
   drawLocations();
+  drawKerbinSideAirfields();
   const pts=$('showWaypoints').checked?waypoints():[];ctx.strokeStyle='#80bfff';ctx.lineWidth=2.2;
   for(let i=1;i<pts.length;i++){
     const path=K.samples(K.geo(pts[i-1]),K.geo(pts[i])).map(p=>screen(p));
@@ -173,9 +176,9 @@ function draw(){
 }
 canvas.addEventListener('wheel',e=>{e.preventDefault();const p=local(e);zoom(Math.exp(-e.deltaY*.0015),p.x,p.y);},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('pointerdown',e=>{if(gesture)return;if(e.button>2)return;const p=local(e),pan=e.shiftKey||e.button!==0;let hit=-1;for(let i=$('showWaypoints').checked?waypoints().length-1:-1;i>=0;i--){const q=screen(K.geo(waypoints()[i])),W=width*view.scale;if([-W,0,W].some(dx=>Math.hypot(q.x+dx-p.x,q.y-p.y)<markerRadius(i)+3*markerScale())){hit=i;break;}}gesture={id:e.pointerId,start:p,last:p,moved:false,hit:pan?-1:hit,pan,location:!pan&&hit<0?hitLocation(p):null,before:snapshot()};if(!pan&&hit>=0){selected=hit;render();}canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{const p=local(e),g=at(p);canvas.title=hitLocation(p)?.name||'';$('cursor').textContent=g?`LAT ${g.lat.toFixed(6)}° / LON ${g.lon.toFixed(6)}°`:'Outside map';if(!gesture||gesture.id!==e.pointerId)return;if(Math.hypot(p.x-gesture.start.x,p.y-gesture.start.y)>3)gesture.moved=true;if(gesture.moved){if(gesture.pan){view.x+=p.x-gesture.last.x;view.y+=p.y-gesture.last.y;}else if(gesture.hit>=0){const x=Math.max(0,Math.min(width,(p.x-view.x)/view.scale)),y=Math.max(0,Math.min(height,(p.y-view.y)/view.scale)),geo=K.toGeo(x,y,width,height,offset),w=waypoints()[gesture.hit];K.set(w,'lat',geo.lat.toFixed(6));K.set(w,'lon',geo.lon.toFixed(6));}gesture.last=p;draw();if(gesture.hit>=0)render();}});
-canvas.addEventListener('pointerup',e=>{if(!gesture||gesture.id!==e.pointerId)return;const g=gesture;gesture=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(g.moved&&g.hit>=0){if(snapshot()!==g.before)checkpoint(g.before);render();}else if(!g.moved&&!g.pan&&g.location){selectLocation(g.location);}else if(!g.moved&&!g.pan&&g.hit<0){const p=at(local(e));if(p)append(Number(p.lat.toFixed(6)),Number(p.lon.toFixed(6)));}});
+canvas.addEventListener('pointerdown',e=>{if(gesture)return;if(e.button>2)return;const p=local(e),pan=e.shiftKey||e.button!==0;let hit=-1;for(let i=$('showWaypoints').checked?waypoints().length-1:-1;i>=0;i--){const q=screen(K.geo(waypoints()[i])),W=width*view.scale;if([-W,0,W].some(dx=>Math.hypot(q.x+dx-p.x,q.y-p.y)<markerRadius(i)+3*markerScale())){hit=i;break;}}gesture={id:e.pointerId,start:p,last:p,moved:false,hit:pan?-1:hit,pan,before:snapshot()};if(!pan&&hit>=0){selected=hit;render();}canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{const p=local(e),g=at(p);$('cursor').textContent=g?`LAT ${g.lat.toFixed(6)}° / LON ${g.lon.toFixed(6)}°`:'Outside map';if(!gesture||gesture.id!==e.pointerId)return;if(Math.hypot(p.x-gesture.start.x,p.y-gesture.start.y)>3)gesture.moved=true;if(gesture.moved){if(gesture.pan){view.x+=p.x-gesture.last.x;view.y+=p.y-gesture.last.y;}else if(gesture.hit>=0){const x=Math.max(0,Math.min(width,(p.x-view.x)/view.scale)),y=Math.max(0,Math.min(height,(p.y-view.y)/view.scale)),geo=K.toGeo(x,y,width,height,offset),w=waypoints()[gesture.hit];K.set(w,'lat',geo.lat.toFixed(6));K.set(w,'lon',geo.lon.toFixed(6));}gesture.last=p;draw();if(gesture.hit>=0)render();}});
+canvas.addEventListener('pointerup',e=>{if(!gesture||gesture.id!==e.pointerId)return;const g=gesture;gesture=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(g.moved&&g.hit>=0){if(snapshot()!==g.before)checkpoint(g.before);render();}else if(!g.moved&&!g.pan&&g.hit<0){const p=at(local(e));if(p)append(Number(p.lat.toFixed(6)),Number(p.lon.toFixed(6)));}});
 canvas.addEventListener('pointercancel',()=>{if(gesture?.hit>=0)restore(gesture.before);gesture=null;});
 new ResizeObserver(()=>{fit();}).observe($('mapBox'));
 render();fit();

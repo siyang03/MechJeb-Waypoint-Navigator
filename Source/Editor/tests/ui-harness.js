@@ -10,7 +10,8 @@ class Element {
   constructor(id){this.id=id;this.value='';this.children=[];this.disabled=false;this.hidden=false;this.checked=false;this.textContent='';this.events={};this.clientWidth=900;this.clientHeight=500;this.classList={toggle:()=>{}};}
   append(...nodes){this.children.push(...nodes);}
   replaceChildren(...nodes){this.children=nodes;}
-  setAttribute(){}
+  setAttribute(name,value){(this.attributes||(this.attributes={}))[name]=String(value);}
+  getAttribute(name){return this.attributes?.[name]??null;}
   remove(){}
   click(){if(!this.disabled)this.onclick?.({preventDefault(){}});}
   getContext(){return fakeContext;}
