@@ -35,10 +35,10 @@ Open `Launch the Editor.html` in **Chrome or Edge**. ⚠️ Firefox and Safari a
 
 Click the Kerbin map to add waypoints and drag them to adjust your route. Save your flight plan alongside `Example.cfg`.
 
-The optional **Additional Map Layers** toggle shows 20 Kerbin Side Remastered airfields with projected runway axes and heading labels when zoomed in. It works offline and does not edit the flight plan. Coordinates: [Caerfinon’s GAPFAS KSR patch](https://forum.kerbalspaceprogram.com/topic/231736-1125-gapfas-a-gap-for-all-systems-v102/); headings: [NavUtilities Continued](https://github.com/linuxgurugamer/NavInstruments/blob/master/GameData/NavInstruments/ModuleManagerCfgs/KerbinSideRemastered.cfg).
-
 ![Flight Plan Editor showing a Kerbin route and estimated turns](Screenshots/Flight_Plan_Editor_Screenshot.png)
 <!-- ![Flight Plan Editor showing a Kerbin route and estimated turns](https://raw.githubusercontent.com/siyang03/MechJeb-Waypoint-Navigator/main/Screenshots/Flight_Plan_Editor_Screenshot.png) -->
+
+> An additional toggle shows 20 [Kerbin Side Remastered](https://spacedock.info/mod/1823/Kerbin%20Side%20Remastered) airfields with projected runway orientations.
 
 **2. Set up MechJeb**
 
