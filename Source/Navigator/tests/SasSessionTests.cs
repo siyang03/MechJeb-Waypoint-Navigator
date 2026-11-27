@@ -2,64 +2,64 @@ using System;
 using System.Collections.Generic;
 using WaypointNavigator;
 static class SasSessionTests {
+ static bool Reject(Action action){try{action();return false;}catch{return true;}}
  public static void Run(Action<bool,string> check) {
-  var session=new NavSasSession();bool sas=false;int writes=0,releases=0;bool restore=true;
-  Action<bool> write=value=>{sas=value;writes++;};
-  Action<bool> release=value=>{restore=value;releases++;};
-  session.End(release);check(writes==0,"Initialization stop never activates SAS");
-  session.End(release);check(writes==0,"Failed preconditions never activate SAS");
+  var s=new NavSasSession();bool sas=true;int writes=0;bool restore=false;
+  Action<bool> write=v=>{sas=v;writes++;};Action<bool> release=v=>restore=v;
+  s.End(release);check(writes==0,"Uninitialized cleanup");
+  s.Begin(()=>sas,write,1);s.Update(1,2,.02);s.Update(3,4,.02);s.Update(-5,5,.02);
+  check(sas&&writes==0,"Small corrections and exactly five preserve SAS");
+  s.Update(0,20,2.98);check(sas,"Commanded turn stays ON at 2.98 seconds");
+  s.Update(0,20,.02);check(!sas,"Commanded turn disables at three seconds");
+  s.Update(0,0,4.98);check(!sas,"4.98 insufficient");s.Update(0,0,.02);check(sas,"Five seconds restores");
+  s.Update(-5.01,0,3);check(!sas,"Negative threshold symmetric");
+  s.Update(0,0,4.9);s.Update(20,0,.02);s.Update(0,0,4.98);check(!sas,"Actual turn resets recovery");s.Update(0,0,.02);check(sas,"Full recovery required");
+  s.End(release);check(sas&&restore,"Normal ON stop restores horizontal");
   foreach(bool initial in new[]{false,true}) {
-   sas=initial;session.Suppress(()=>sas,write);check(!sas,"Engagement disables SAS regardless of initial state");
-   session.End(release);check(sas&&restore,"Ordinary termination restores SAS after normal horizontal release");
-   int before=writes;session.End(release);check(writes==before,"Repeated stop never changes SAS");
+   sas=initial;s.Begin(()=>sas,write,20);check(sas==initial,"Initial bank preserves SAS until timed shutdown");
+   s.Update(20,0,3);check(!sas,"Initial bank disables after three seconds");
+   s.End(release);check(sas&&restore,"Normal OFF stop restores horizontal and SAS");
+   int before=writes;s.End(release);check(writes==before,"Repeated cleanup inert");
   }
-  session.Suppress(()=>sas,write);sas=true;session.End(release);
-  check(sas&&!restore,"Manual SAS override requests Release(false) and leaves SAS on");
-  var events=new List<string>();sas=false;
-  session.Suppress(()=>sas,value=>{sas=value;events.Add(value?"sas on":"sas off");});
-  session.End(value=>{events.Add("release");});
-  check(string.Join(",",events)=="sas off,release,sas on","Release precedes SAS restoration");
-  // Bind to the original vessel's state; switching the active vessel changes no callback.
-  bool original=true,other=false;
-  session.Suppress(()=>original,value=>original=value);session.End(release);
-  check(original&&!other,"Only the session vessel receives SAS restoration");
-  bool destroyed=false;sas=true;
-  session.Suppress(()=>!destroyed&&sas,value=>{if(!destroyed)sas=value;});destroyed=true;
-  session.End(release);check(!sas,"Destroyed vessel callbacks safely skip restoration");
-  bool threw=false;sas=true;
-  try{session.Suppress(()=>sas,value=>{sas=value;if(!value)throw new ApplicationException("write failed after change");});}
-  catch(ApplicationException){threw=true;}
-  session.End(release);check(threw&&sas,"Suppression write failure rolls back SAS");
-  threw=false;sas=true;
-  try{session.Suppress(()=>sas,value=>{if(value)sas=true;});}catch(InvalidOperationException){threw=true;}
-  session.End(release);check(threw&&sas&&!restore,"Failed disable verification rolls back without competing horizontal restore");
-  bool readFails=false;sas=true;
-  session.Suppress(()=>{if(readFails)throw new ApplicationException("read failed");return sas;},write);
-  readFails=true;int priorReleases=releases;threw=false;
-  try{session.End(release);}catch(ApplicationException){threw=true;}
-  check(threw&&sas&&releases==priorReleases+1&&!restore,"Read failure still releases conservatively and restores SAS");
-  sas=true;session.Suppress(()=>sas,write);threw=false;
-  try{session.End(value=>{throw new ApplicationException("release failed");});}catch(ApplicationException){threw=true;}
-  check(threw&&sas,"Adapter release failure still restores SAS");
-  // Exercise the session policy together with real adapter ownership logic.
-  var core=new MuMech.MechJebCore();var part=new Part();part.Modules.Add(core);
-  var vessel=new Vessel();vessel.parts.Add(part);var adapter=MechJebAdapter.Find(vessel);var ap=core.Airplane;
-  ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;adapter.Acquire();session.Suppress(()=>sas,write);
-  int restartWrites=writes;
-  adapter.CheckOwnership(); // Successful waypoint restart retains adapter and SAS session.
-  check(writes==restartWrites&&!sas,"Waypoint restart leaves SAS off without an intermediate toggle");
-  ap.HeadingHoldEnabled=true;ap.HeadingTarget=71;threw=false;
-  try{adapter.CheckOwnership();}catch(InvalidOperationException){threw=true;}
-  session.End(adapter.Release);
-  check(threw&&sas&&ap.HeadingHoldEnabled&&ap.HeadingTarget==71,"Heading takeover detected without bank demand and preserved on release");
-  check(!adapter.YawBridgeActive,"Heading takeover detaches yaw bridge");
-  adapter.Acquire();session.Suppress(()=>sas,write);
-  // Any failed restart goes through the same ordinary termination/rollback.
-  core.running=false;threw=false;try{adapter.CheckOwnership();}catch(InvalidOperationException){threw=true;}
-  session.End(adapter.Release);check(threw&&sas,"Failed restart or controller conflict restores SAS");core.running=true;
-  adapter.Acquire();session.Suppress(()=>sas,write);ap.RollTarget=19;
-  threw=false;try{adapter.CheckOwnership();}catch(InvalidOperationException){threw=true;}
-  session.End(adapter.Release);check(threw&&sas&&ap.RollTarget==19,"Roll override detected without demand and preserved");
-  check(ap.AltitudeTarget==10050&&ap.SpeedTarget==285,"SAS session changes preserve altitude and speed");
+  sas=true;s.Begin(()=>sas,write,0);
+  s.Update(10,0,2);s.Update(2,0,.02);check(sas,"Near-level interrupts shutdown");
+  s.Update(10,0,2.98);check(sas,"Interrupted shutdown requires fresh three seconds");
+  s.Update(10,0,.02);check(!sas,"Fresh shutdown reaches three seconds");
+  int offWrites=writes;s.Update(10,0,100);check(!sas&&writes==offWrites,"Already OFF has no delayed or redundant transition");
+  s.Update(2,0,4.98);s.Update(5.01,0,.02);s.Update(2,0,4.98);check(!sas,"Threshold alternation resets recovery");
+  s.Update(2,0,.02);check(sas,"Recovery still takes five seconds");
+  s.Update(0,10,2.98);s.Update(0,5,.02);s.Update(0,-10,2.98);check(sas,"Exactly five resets shutdown and negative demand is symmetric");
+  s.Update(0,-10,.02);check(!sas,"Negative demand disables after three seconds");s.End(release);
+  sas=true;s.Begin(()=>sas,write,0);for(int i=0;i<1000;i++)s.Update(1,2,.02);
+  check(sas,"Small corrections leave SAS ON indefinitely");
+  for(int i=0;i<149;i++)s.Update(-10,0,.02);check(sas,"149 shutdown ticks keep SAS ON");
+  s.Update(-10,0,.02);check(!sas,"150 shutdown ticks equal three seconds");s.End(release);
+  sas=false;s.Begin(()=>sas,write,0);s.Update(2,1,5);check(sas,"Initially OFF recovers");s.End(release);
+  foreach(bool expected in new[]{false,true}) {
+   sas=expected;s.Begin(()=>sas,write,0);sas=!expected;
+   check(Reject(s.Check),"Manual override detected");int before=writes;
+   s.End(release);check(sas==!expected&&!restore&&writes==before,"Manual state preserved");
+  }
+  foreach(double invalid in new[]{double.NaN,double.PositiveInfinity,-1.0,0.0}) {
+   sas=false;s.Begin(()=>sas,write,0);s.Update(0,0,4.9);
+   check(Reject(()=>s.Update(0,0,invalid))&&!sas,"Invalid dt cannot recover");s.End(release);
+  }
+  foreach(double invalid in new[]{double.NaN,double.NegativeInfinity}) {
+   sas=false;s.Begin(()=>sas,write,0);check(Reject(()=>s.Update(invalid,0,5))&&!sas,"Invalid actual rejected");
+   check(Reject(()=>s.Update(0,invalid,5))&&!sas,"Invalid demand rejected");s.End(release);
+  }
+  sas=true;s.Begin(()=>sas,v=>{},20);check(Reject(()=>s.Update(20,0,3)),"Failed readback rejected");s.End(release);check(restore,"Internal failure is not override");
+  sas=true;s.Begin(()=>sas,v=>{sas=v;if(!v)throw new Exception();},20);check(Reject(()=>s.Update(20,0,3)),"Partial write rejected");s.End(release);check(sas&&restore,"Partial write rollback");
+  sas=false;s.Begin(()=>sas,write,0);s.Update(0,0,4.9);s.ResetRecovery();s.Update(0,0,.1);check(!sas,"Restart resets timer");
+  s.End(release,false);check(!sas&&restore,"Destroyed vessel skips restoration");
+  sas=false;s.Begin(()=>sas,write,0);for(int i=0;i<250;i++)s.Update(0,0,.02);
+  check(sas,"250 physics ticks equal five seconds");s.End(release);
+  sas=true;bool fail=false;s.Begin(()=>sas,v=>{if(!fail)sas=v;},0);fail=true;
+  check(Reject(()=>s.Update(0,20,3)),"Later transition readback failure terminates");s.End(release);check(restore,"Later internal failure restores controller");
+  bool readFails=false;sas=false;s.Begin(()=>{if(readFails)throw new Exception();return sas;},write,0);readFails=true;
+  restore=false;check(Reject(()=>s.End(release))&&restore&&sas,"Read failure still releases and restores");
+  var events=new List<string>();sas=false;s.Begin(()=>sas,v=>{sas=v;events.Add("sas");},0);s.End(v=>events.Add("release"));
+  check(string.Join(",",events)=="release,sas","Release precedes restoration");
+  sas=false;s.Begin(()=>sas,write,0);check(Reject(()=>s.End(v=>{throw new Exception();}))&&sas,"Release failure still restores");
  }
 }

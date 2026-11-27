@@ -9,7 +9,7 @@ public class Vessel {
  public List<Part> parts=new List<Part>();
 }
 public enum KSPActionGroup {SAS}
-public class Groups {public bool ThrowOnRestore;bool sas=true;public bool this[KSPActionGroup key]{get{return sas;}}public void SetGroup(KSPActionGroup key,bool value){sas=value;if(value&&ThrowOnRestore)throw new Exception("SAS restore failure");}}
+public class Groups {public bool ThrowOnRestore,IgnoreDisable;bool sas=true;public bool this[KSPActionGroup key]{get{return sas;}}public void SetGroup(KSPActionGroup key,bool value){if(!value&&IgnoreDisable)return;sas=value;if(value&&ThrowOnRestore)throw new Exception("SAS restore failure");}}
 public class CelestialBody {public string bodyName="Kerbin";public double Radius=600000;}
 public static class FlightGlobals {public static Vessel ActiveVessel;public static List<Vessel> Vessels=new List<Vessel>();}
 public static class HighLogic {public static bool LoadedSceneIsFlight=true;}
@@ -104,7 +104,7 @@ class Tests {
   Check(adapter.BankLimitSource=="(MechJeb)","Equal limits show shared source");Equal(adapter.EffectiveBankLimit,45,"Equal effective limit unchanged");
   ap.BankAngle=45.0000005;Check(adapter.BankLimitSource=="(MechJeb)","Near equal limits use tolerance");
   ap.BankAngle=25;ap.RollLimit.Val=45;
-  adapter.Acquire();Check(!ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Native MechJeb roll mode acquired");Check(MechJebYawBridge.YawEnabled(ap),"Yaw loop enabled during NAV roll hold");
+  adapter.Acquire();Check(!ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Native MechJeb roll mode acquired");Check(!MechJebYawBridge.YawEnabled(ap),"NAV leaves yaw bridge inactive");
   Equal(adapter.WriteBank(20),20,"Kramax demand passed without ramp");Equal(ap.RollTarget,20,"Native roll setpoint written");
   ap.RollLimit.Val=12;Check(adapter.BankLimitSource=="(MechJeb Roll)","Engaged label follows live roll change");Equal(adapter.WriteBank(30),12,"MechJeb authority limit retained");adapter.Release();Check(!MechJebYawBridge.YawEnabled(ap),"Yaw extension removed on release");Check(!ap.RollHoldEnabled,"Owned hold released");Equal(ap.BankAngle,25,"Bank setting untouched");Equal(ap.RollLimit.Val,12,"Roll limit untouched");
   ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;core.VesselState.currentHeading=280;adapter.Acquire();adapter.WriteBank(-10);adapter.Release();Check(ap.HeadingHoldEnabled,"Previous heading mode restored");Check(MechJebYawBridge.YawEnabled(ap),"Normal MechJeb heading yaw remains enabled");Equal(ap.HeadingTarget,280,"No stale heading restored");
@@ -121,15 +121,14 @@ class Tests {
   adapter.Release(false);Check(!ap.HeadingHoldEnabled&&!ap.RollHoldEnabled,"SAS release does not restore previous heading hold");
   Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Fallback release clears yaw state");
   HarmonyYawPatch.Failure=null;
-  adapter.Acquire();Check(adapter.YawBridgeActive,"Successful attachment reports active bridge");
+  adapter.Acquire();Check(!adapter.YawBridgeActive,"Bridge remains inactive");
   adapter.Release(false);Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"SAS release detaches active bridge");
   Check(!ap.HeadingHoldEnabled&&!ap.RollHoldEnabled,"SAS release disables owned horizontal holds");
   ap.HeadingHoldEnabled=ap.RollHoldEnabled=true;
   HarmonyYawPatch.Failure=new ApplicationException("unrelated installation failure");
-  threw=false;try{adapter.Acquire();}catch(ApplicationException){threw=true;}
-  Check(threw,"Unexpected installer failure propagates");Check(!adapter.YawBridgeActive,"Failed acquisition has no active bridge");
-  Check(ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Failed acquisition restores previous heading mode");
-  ap.HeadingHoldEnabled=false;Check(!MechJebYawBridge.YawEnabled(ap),"Failed acquisition leaves no yaw ownership");
+  adapter.Acquire();Check(!adapter.YawBridgeActive,"Installer unused");
+  adapter.Release();Check(ap.HeadingHoldEnabled&&ap.RollHoldEnabled,"Previous modes restored");
+  ap.HeadingHoldEnabled=false;
   HarmonyYawPatch.Failure=null;
   ap.RollTarget=9;adapter.Acquire();adapter.Release();Equal(ap.RollTarget,9,"Normal release restores prior roll target");Check(ap.RollHoldEnabled,"Normal release restores prior roll hold");
   Check(!adapter.YawBridgeActive&&!MechJebYawBridge.YawEnabled(ap),"Normal release clears yaw ownership");

@@ -27,34 +27,34 @@ Original snapshots and checksums are in `../third_party/Kramax`. Tests compile o
 
 ## MechJeb interface and differences
 
-Kramax produces a bank demand. We pass it to MechJeb's native **RollTarget**, with Roll Hold on and Heading Hold off. MechJeb's bank limits apply unchanged. No Kramax aircraft roll/yaw controller is included. MechJeb's existing yaw PID now runs through the scoped yaw bridge. Full aircraft motion is therefore not identical to Kramax.
+Kramax produces a bank demand. We pass it to MechJeb's native **RollTarget**, with Roll Hold on and Heading Hold off. MechJeb's bank limits apply unchanged. No Kramax aircraft roll/yaw controller is included. Stock SAS now supplies near-level stabilization under the adaptive policy below. Full aircraft motion is therefore not identical to Kramax.
 
 Coincident legs under 1 mm are skipped to avoid division by zero. Final completion releases NAV. Reengagement resets the guidance state and starts a fresh intercept. Previously enabled Heading Hold resumes on the current heading to avoid a stale-target turn. Vertical, throttle, landing and gear control are excluded.
 
 ## Validation
 
-4,657 core/session assertions (including 42 multi-vessel assertions) and 256 yaw-bridge/profile assertions pass, including original-code comparisons for geometry, PID state, sequencing and a 200-position replay. Real KSP CFG tests also pass. These are code-level checks, not a flight test or proof that physical overbank is fixed.
+Adaptive SAS core/session assertions and 256 yaw-bridge/profile assertions pass, including original-code comparisons for geometry, PID state, sequencing and a 200-position replay. Real KSP CFG tests also pass. These are code-level checks, not a flight test or proof that physical overbank is fixed.
 
-## Yaw bridge
+## Adaptive stock SAS
 
-`HarmonyYawPatch` changes only the final `HeadingHoldEnabled` read in the verified classic aircraft controller's `Drive` method. The first read, which selects heading-generated bank versus RollTarget, stays unchanged. When NAV owns Roll Hold, the final gate also accepts that ownership and runs the existing zero-sideslip yaw PID. All original yaw target, error, gain, integral and actuator calculations remain in MechJeb. Kramax guidance is unchanged.
+NAV uses stock SAS for stabilization instead of attaching the Harmony yaw bridge. The unused bridge sources, build dependency and isolated profile tests remain for this first flight-test build.
 
-`ComputeYaw` compares surface-path direction with nose direction, not heading rate. A coordinated left or right turn therefore produces zero yaw error. This is sideslip stabilization, not a new turn-coordination/feedforward law or a guarantee of perfect coordination.
+For B = max(abs(actual bank), abs(effective MechJeb bank command)), B > 5° resets recovery and disables enabled SAS after three continuous seconds of accumulated physics time, including after engagement. Returning to B <= 5° resets the shutdown countdown. At B <= 5°, enabled SAS stays enabled; disabled SAS returns after five continuous seconds of accumulated physics time. Exactly 5° is inside the band. Small 1–2° corrections preserve SAS. Direct-to resets an unfinished recovery countdown without toggling SAS and checks the retained native roll command even before a new demand is available.
 
-Compatibility is checked using SHA-256 of the installed `Drive` and `ComputeYaw` IL bodies, plus a strict two-gate instruction match. Unsupported profiles fail closed. The supplied MechJeb DLL matches; the downloaded dev branch does not contain this classic module. Harmony changes code in memory only. No installed DLL or PID gain is modified.
+Each vessel owns its expected SAS state, countdown and bound callbacks. A mismatch in either direction stops that session and preserves the observed manual state. A change that returns to the expected boolean between checks cannot be attributed. Normal stops restore owned MechJeb horizontal control before ending with SAS on; confirmed SAS overrides release without restoring horizontal holds. Destroyed vessels receive no SAS restoration. Internal write failures are distinct from overrides and trigger transactional cleanup.
 
-The 256 bridge tests check the transpiler, unknown-layout rejection, normal-mode preservation, installed IL hashes/gates and zero-sideslip left/right heading changes. Core tests check yaw ownership and immediate override/release. They do not run the actual detour in KSP or test aerodynamic rudder response.
+Actual KSP flight behavior remains **NOT TESTED**. Verify aerodynamic interaction between stock SAS and native MechJeb Roll Hold in game.
 
 The UI now has NAV on/off and Plans controls only. The redundant Pause/Resume and Guidance panel were removed. The bank row includes the live MechJeb limit; the navigation PID output cap now follows that live limit rather than retaining Kramax’s fixed ±30° cap.
 
 
 ## v1.2.0 session lifecycle
 
-One flight-scene window owns a NavSessionRegistry keyed by Vessel.id, plus per-vessel VesselPlanSelection records. Each NavSession holds the original Vessel reference, body and parts snapshot, a deep plan snapshot, Navigation (including its PID), adapter and SAS suppression obligation. No navigation state is shared. Refreshing a foreground CFG cannot replace a running route. Selections remain local to this flight-scene instance; they are not persisted in saves.
+One flight-scene window owns a NavSessionRegistry keyed by Vessel.id, plus per-vessel VesselPlanSelection records. Each NavSession holds the original Vessel reference, body and parts snapshot, a deep plan snapshot, Navigation (including its PID), adapter and adaptive SAS session. No navigation state is shared. Refreshing a foreground CFG cannot replace a running route. Selections remain local to this flight-scene instance; they are not persisted in saves.
 
-Start validates physics/identity/body/conflicts, rejects duplicate vessel/controller ownership, initializes guidance, acquires native MechJeb roll and suppresses that vessel's SAS transactionally. Update checks validity and overrides; FixedUpdate alone steps guidance using universal time and the physics timestep. Both process defensive session snapshots and isolate exceptions. All operations remain on KSP's main thread. Direct-to resets guidance without reacquiring control. Stop releases yaw/horizontal ownership before SAS restoration, records a per-vessel reason and removes only that entry. All-session cleanup continues through exceptions and is repeatable.
+Start validates physics/identity/body/conflicts, rejects duplicate vessel/controller ownership, initializes guidance, acquires native MechJeb roll and initializes that vessel's adaptive SAS transactionally. Update checks validity and overrides; FixedUpdate alone steps guidance using universal time and the physics timestep. Both process defensive session snapshots and isolate exceptions. All operations remain on KSP's main thread. Direct-to resets guidance without reacquiring control. Stop releases horizontal ownership before SAS restoration, records a per-vessel reason and removes only that entry. All-session cleanup continues through exceptions and is repeatable.
 
-Vessel switching is not a stop condition. Packing, unloading, landing, destruction, scene exit, identity/reference/topology/body changes, MechJeb controller replacement/disable, SAS activation, horizontal takeover and competing autopilots stop the affected session. A changed parts list is treated conservatively as docking/splitting; NAV is never transferred automatically. Stops/telemetry include vessel GUIDs, with vessel names in stop and telemetry records. No physics distances, packing rules, native yaw/pitch/throttle controllers or guidance gains were changed.
+Vessel switching is not a stop condition. Packing, unloading, landing, destruction, scene exit, identity/reference/topology/body changes, MechJeb controller replacement/disable, unexpected SAS changes, horizontal takeover and competing autopilots stop the affected session. A changed parts list is treated conservatively as docking/splitting; NAV is never transferred automatically. Stops/telemetry include vessel GUIDs, with vessel names in stop and telemetry records. No physics distances, packing rules, native yaw/pitch/throttle controllers or guidance gains were changed.
 
 ### Installed MechJeb compatibility inspection
 
@@ -65,7 +65,7 @@ The supplied installed MechJeb2.dll SHA-256 is `1691fa9cdc18d6f73efe954d19f2dc7b
 - Core Drive updates that vessel's VesselState and invokes enabled modules' Drive methods. Aircraft Autopilot Drive has no active-vessel gate.
 - FixedUpdate continues for a nonfocused master. Focus checks govern settings reload: ClearModulesCache and OnLoad run on gaining focus. The local dev source has the same broad per-vessel design but differs from the installed binary.
 
-This establishes an inactive-vessel control path by binary inspection, not proof of physical flight. Settings reloads can change modes or controller references; the navigator detects these and stops safely rather than rebinding. Whether the supplied installation retains all NAV settings through repeated focus changes remains an in-game acceptance test. No inactive-vessel bypass patch was added. Harmony's existing verified IL hashes and gate checks are unchanged; unsupported profiles retain passive yaw fallback.
+This establishes an inactive-vessel control path by binary inspection, not proof of physical flight. Settings reloads can change modes or controller references; the navigator detects these and stops safely rather than rebinding. Whether the supplied installation retains all NAV settings through repeated focus changes remains an in-game acceptance test. No inactive-vessel bypass patch was added. The retained Harmony sources and dependency are unchanged, but NAV does not attach the bridge.
 
 ### Kramax conflict attribution
 
@@ -73,6 +73,6 @@ The supplied Kramax George class has a public Vessel vessel field, assigned by S
 
 ### Validation boundaries
 
-Baseline: 4,615 assertions. Current: 4,657 core/session assertions, 256 yaw/profile assertions, and real KSP ConfigNode round-trip checks. Tests use the production NavSession and registry with minimal vessels/controllers; they cover independent demands/limits/SAS/yaw, switching lookup, route snapshots, completion, direct-to, failures, cleanup exceptions, identity/topology/controller changes and no automatic resumption. They do not execute Unity physics or the native Harmony detour.
+Baseline: 4,615 assertions. Adaptive SAS validation includes core/session assertions, retained isolated yaw/profile assertions, and real KSP ConfigNode round-trip checks. Tests use the production NavSession and registry with minimal vessels/controllers; they cover independent demands/limits/SAS, switching lookup, route snapshots, completion, direct-to, failures, cleanup exceptions, identity/topology/controller changes and no automatic resumption. They do not execute Unity physics or the native Harmony detour.
 
 All flight acceptance cases are **NOT TESTED**. See [MULTI_VESSEL_TEST_PLAN.md](MULTI_VESSEL_TEST_PLAN.md). The local distribution ZIP is a build-validation artifact only; no release, tag or publication is authorized.

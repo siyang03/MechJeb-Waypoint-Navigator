@@ -40,23 +40,24 @@ namespace WaypointNavigator {
     Adapter=candidate;
     Navigation.BankLimit=Adapter.EffectiveBankLimit;
     Navigation.Start(Plan,Position(),Vessel.mainBody.Radius,waypoint,Planetarium.GetUniversalTime());
-    SelectedWaypoint=waypoint;Adapter.Acquire();
-    SasSession.Suppress(()=>Vessel!=null&&Vessel.ActionGroups[KSPActionGroup.SAS],
-     enabled=>{if(Vessel!=null)Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS,enabled);});
-    Engaged=true;Status=Adapter.YawBridgeActive?"NAV engaged — MechJeb roll + yaw (SAS off)":"NAV engaged — Passive yaw fallback (SAS off)";
+    SelectedWaypoint=waypoint;CommandedBank=0;Adapter.Acquire();
+    SasSession.Log=message=>UnityEngine.Debug.Log("Waypoint Navigator SAS: vessel="+VesselId+" "+message);
+    SasSession.Begin(()=>Vessel!=null&&Vessel.ActionGroups[KSPActionGroup.SAS],
+     enabled=>{if(Vessel!=null&&Vessel.id==VesselId&&FlightGlobals.Vessels.Contains(Vessel))Vessel.ActionGroups.SetGroup(KSPActionGroup.SAS,enabled);},Adapter.ActualBank);
+    Engaged=true;Status=SasSession.Status;
    } catch(Exception e) {Stop(e.GetBaseException().Message);throw;}
   }
   public void Check() {
    Validate();
    if(!Engaged)throw new InvalidOperationException("Session disengaged");
-   if(Vessel.ActionGroups[KSPActionGroup.SAS])throw new InvalidOperationException("NAV disengaged: SAS enabled");
+   SasSession.Check();
    if(!Adapter.Matches(Vessel))throw new InvalidOperationException("MechJeb controller changed");
    Adapter.CheckOwnership();
   }
   public void RestartToWaypoint(int waypoint) {
    Check();Navigation.BankLimit=Adapter.EffectiveBankLimit;
    Navigation.Start(Plan,Position(),Vessel.mainBody.Radius,waypoint,Planetarium.GetUniversalTime());
-   SelectedWaypoint=waypoint;CommandedBank=0;
+   SelectedWaypoint=waypoint;CommandedBank=0;SasSession.ResetRecovery();
   }
   public void Step() {
    Check();Navigation.BankLimit=Adapter.EffectiveBankLimit;
@@ -64,6 +65,8 @@ namespace WaypointNavigator {
    SelectedWaypoint=Navigation.Active;
    if(Navigation.Complete){Stop("Route complete");return;}
    if(Navigation.HasDemand)CommandedBank=Adapter.WriteBank(Navigation.TurnDemand);
+   SasSession.Update(Adapter.ActualBank,Adapter.LastEffectiveBankCommand,TimeWarp.fixedDeltaTime);
+   Status=SasSession.Status;
    if(UnityEngine.Time.realtimeSinceStartup>=NextDiagnostic) {
     NextDiagnostic=UnityEngine.Time.realtimeSinceStartup+5;
     try {UnityEngine.Debug.Log("Waypoint Navigator telemetry: vessel="+VesselId+" name="+Vessel.vesselName+" wp="+Navigation.Active+" xte="+Navigation.CrossTrack+" lateralVelocity="+Navigation.CrossTrackVelocity+" desiredLateral="+Navigation.DesiredCrossTrackVelocity+" turnDemand="+Navigation.TurnDemand+" "+Adapter.Diagnostic());}
@@ -72,7 +75,7 @@ namespace WaypointNavigator {
   }
   public void Stop(string reason) {
    Engaged=false;Status=reason;
-   try {SasSession.End(restore=>{if(Adapter!=null)Adapter.Release(restore);});}
+   try {SasSession.End(restore=>{if(Adapter!=null)Adapter.Release(restore);},Vessel!=null&&Vessel.id==VesselId&&FlightGlobals.Vessels.Contains(Vessel));}
    finally {Adapter=null;}
   }
   static Plan Snapshot(Plan source) {

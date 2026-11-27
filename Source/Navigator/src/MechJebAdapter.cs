@@ -28,6 +28,7 @@ namespace WaypointNavigator {
   }}
   public double CurrentHeading {get{return (double)Get(Get(core,"VesselState"),"currentHeading");}}
   public double ActualBank {get{return -(double)Get(Get(core,"VesselState"),"currentRoll");}}
+  public double LastEffectiveBankCommand {get{return lastRollTarget;}}
   public bool YawBridgeActive { get; private set; }
   public void Acquire() {
    if(acquired)throw new InvalidOperationException("NAV already owns roll control");
@@ -37,8 +38,7 @@ namespace WaypointNavigator {
     // Public API initializes MechJeb's horizontal PIDs; then choose its native roll mode.
     Call(controller,"EnableHeadingHold");Set(controller,"HeadingHoldEnabled",false);Set(controller,"RollTarget",0.0);lastRollTarget=0;
     if(!OwnsRoll())throw new InvalidOperationException("MechJeb native roll control unavailable");
-    try {MechJebYawBridge.Attach(controller,OwnsRoll);YawBridgeActive=true;}
-    catch(UnsupportedYawBridgeException) {MechJebYawBridge.Detach(controller);YawBridgeActive=false;}
+    YawBridgeActive=false;
    }catch{Release();throw;}
   }
   bool OwnsRoll(){CheckConflict();return acquired&&(bool)Get(core,"running")&&(bool)Get(controller,"Enabled")&&!(bool)Get(controller,"HeadingHoldEnabled")&&(bool)Get(controller,"RollHoldEnabled")&&Math.Abs((double)Get(controller,"RollTarget")-lastRollTarget)<0.001;}

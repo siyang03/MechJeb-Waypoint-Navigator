@@ -19,12 +19,12 @@ For every test retain KSP.log from the disposable copy and record observed resul
 **Actions:**
 
 1. Enable MechJeb Aircraft Autopilot and configure altitude/speed hold. Record BankAngle and RollLimit; select the CFG, plan and starting waypoint.
-2. Engage NAV; verify SAS turns off. Follow several waypoint transitions; compare bearing, heading, bank, cross-track distance and route progress with the craft.
+2. Engage NAV nearly level; verify initially enabled SAS remains on. Command or reach bank above 5° and verify SAS stays on for 2.98 seconds and turns off at three continuous physics seconds. Interrupt shutdown with bank <=5° and verify a fresh three seconds is required; repeat when engaging already banked. Return actual and effective commanded bank to <=5° for five physics seconds and verify recovery. Test both bank directions, exactly 5°, and a new turn during recovery. Follow several waypoint transitions; compare bearing, heading, bank, cross-track distance and route progress with the craft.
 3. Click a different waypoint during NAV. Verify an immediate new intercept with no SAS/autopilot toggle. Test FAF/RW inbound-leg behavior where available.
 4. Change each bank limit independently and apply its Set button. Verify target bank respects the lower live limit; observe actual bank separately.
 5. Disengage, verify SAS restoration, reengage and complete the route. Repeat with prior Heading Hold and with prior Roll Hold. Hide/show using F8.
 
-**Expected:** Single-aircraft guidance/readouts and horizontal restoration match v1.1.0. Completion releases yaw/roll ownership and restores SAS; altitude/speed targets remain intact.
+**Expected:** Single-aircraft guidance/readouts and horizontal restoration match v1.1.0. Completion releases roll ownership and restores SAS; altitude/speed targets remain intact.
 
 **KSP.log evidence:** One vessel GUID in telemetry; explicit Disengaged and Route complete stop reasons. No cleanup exceptions.
 
@@ -42,7 +42,7 @@ For every test retain KSP.log from the disposable copy and record observed resul
 
 1. Configure altitude/speed hold and enable Aircraft Autopilot separately on both craft. Select A route and engage A NAV.
 2. Switch A → B. Observe A continuing its turn/route physically; verify the UI displays B selection/readouts and count 1.
-3. Select route B and engage B NAV. Verify count 2 and B SAS off.
+3. Select route B and engage B NAV. Verify count 2 and B adaptive SAS state. Hold A near 20° and B near 1°; verify A SAS off and B SAS on.
 4. Switch B → A → B repeatedly, including while each is turning. Observe both aircraft following their own different routes for several waypoint transitions.
 5. Hide the window with F8 and continue; show it again. Record any stop during focus/settings reload.
 
@@ -105,14 +105,14 @@ For every test retain KSP.log from the disposable copy and record observed resul
 
 **Actions:**
 
-1. Activate SAS manually on A. Verify A stops and B continues.
+1. While A expects SAS off, enable it manually; while A expects SAS on, disable it manually. Verify each mismatch stops only A and preserves its manual state. A toggle that returns to the expected boolean between checks cannot be detected.
 2. Reengage A and activate MechJeb Heading Hold on A. Verify takeover is preserved and B continues.
 3. Repeat with manual RollTarget/mode changes and another incompatible MechJeb attitude mode.
 4. If Kramax is installed, activate a Kramax mode on A and then on an unrelated vessel. Verify attributable conflicts stop the competing craft; unknown APIs must retain conservative protection.
 
 **Expected:** SAS override releases owned horizontal holds before restoration. Manual Heading Hold/targets are not overwritten. B remains independent unless an unattributable conservative conflict is detected.
 
-**KSP.log evidence:** A-only SAS enabled / horizontal mode changed / conflict reasons. No unrelated stop with a reliably attributable Kramax API.
+**KSP.log evidence:** A-only external SAS override / horizontal mode changed / conflict reasons. No unrelated stop with a reliably attributable Kramax API.
 
 **Tester/date, observations, log path and deviations:** ____________________
 
@@ -177,3 +177,10 @@ For every test retain KSP.log from the disposable copy and record observed resul
 
 **Tester/date, observations, log path and deviations:** ____________________
 
+
+## Adaptive SAS acceptance additions
+
+- [ ] Stock SAS supplies stabilization; NAV reports no active Harmony yaw bridge (dependency retained). Actual flight behavior remains unverified.
+- [ ] At <=5° in both actual and commanded bank, initially OFF SAS recovers after five continuous physics seconds. A turn at 4.9 seconds resets the full delay. Small corrections preserve enabled SAS.
+- [ ] Switching vessels preserves independent countdowns. Direct-to resets only its own countdown and cannot hide an existing large RollTarget behind a zero UI command.
+- [ ] Normal stops with SAS either ON or OFF restore prior owned horizontal control; manual SAS overrides preserve manual state. Altitude/speed holds and bank limits remain unchanged.
