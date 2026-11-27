@@ -60,7 +60,7 @@ Press **NAV on**. Your aircraft will follow the waypoints automatically!
 ## Good to Know
 
 - **Altitude and speed:** NAV controls heading only. Set altitude and speed separately in MechJeb.
-- **SAS:** Manually enabling SAS or MechJeb Heading Hold disengages NAV.
+- **SAS:** NAV automatically manages SAS during flight. Manually toggling SAS or enabling MechJeb Heading Hold disengages NAV.
 - **Turn predictions:** Estimated paths are not guarantees; sharp turns at high speeds may overshoot.
 - **F8** toggles the Navigator window.
 
